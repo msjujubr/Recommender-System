@@ -9,17 +9,23 @@
 ### 📖 Sumário
 - [Introdução]()
   - [O que são Sistemas de Recomendação?]()
-  - [Compilação e Execução]()
+  - [Objetivos do Trabalho]()
+  - [Organização do Trabalho]()
 - [Metodologia]()
   - [Obtenção e Processamento dos Dados]()
+  - [Ferramentas Utilizadas]()
 - [Análise de Performance]()
-  - [Comportaento]()
+  - [Comportamento]()
   - [Avaliação Geral]()
-- [Compilação, Entradas e Saídas](#compilação-entradas-e-saídas)
-  - [MakeFile](#makefile)
-  - [Input.dat](#inputdat)
-  - [Output.dat](#outputdat)
+- [Compilação e Execução](#compilação-entradas-e-saídas)
+  - [MakeFile]()
+  - [Input.dat]()
+  - [Explore.dat]()
+  - [Output.dat]()
+- [Conclusão]()
 - [Referências](#referências)
+- [Autores](#autores)
+- [Agradecimentos](#agradecimentos)
 
 </td> <td>
 
@@ -34,8 +40,6 @@
  <!--- deixar os calculos por aqui também? --->
   Cálculos como medida de distância euclidiana, similaridade do cosseno ou Jaccard
  devem ser considerados como alternativas. Avaliação conforme critérios de eficiência computacional, qualidade dos resultados, organização do código e documentação, conforme descrito a seguir.
-
-
  
 ## O que são Sistemas de Recomendação?
 
@@ -128,6 +132,11 @@ Este apresenta os seguintes comandos:
 - [1]: https://doi.org/10.1145/2827872
 - *F. Maxwell Harper and Joseph A. Konstan. 2015. The MovieLens Datasets: History and Context. ACM Transactions on Interactive Intelligent Systems (TiiS) 5, 4: 19:1–19:19.*
 
+# Autores
+Este trabalho foi realizado por:
+
+### Arthur Santana de Mesquita
+
 <div> 
   <a href="https://www.youtube.com/@msjujubr" target="_blank"><img src="https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white" target="_blank"></a>
   <a href="https://instagram.com/msjujubr" target="_blank"><img src="https://img.shields.io/badge/-Instagram-%23E4405F?style=for-the-badge&logo=instagram&logoColor=white" target="_blank"></a>
@@ -135,3 +144,25 @@ Este apresenta os seguintes comandos:
   <a href = "mailto:juliamourasouza10@gmail.com"><img src="https://img.shields.io/badge/-Gmail-%23333?style=for-the-badge&logo=gmail&logoColor=white" target="_blank"></a>
   <a href="https://www.linkedin.com/in/msjujubr/" target="_blank"><img src="https://img.shields.io/badge/-LinkedIn-%230077B5?style=for-the-badge&logo=linkedin&logoColor=white" target="_blank"></a>
 </div>
+
+### Júlia de Moura Souza
+
+<div> 
+  <a href="https://www.youtube.com/@msjujubr" target="_blank"><img src="https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white" target="_blank"></a>
+  <a href="https://instagram.com/msjujubr" target="_blank"><img src="https://img.shields.io/badge/-Instagram-%23E4405F?style=for-the-badge&logo=instagram&logoColor=white" target="_blank"></a>
+ 	<a href="https://www.twitch.tv/msjujubr" target="_blank"><img src="https://img.shields.io/badge/Twitch-9146FF?style=for-the-badge&logo=twitch&logoColor=white" target="_blank"></a>
+  <a href = "mailto:juliamourasouza10@gmail.com"><img src="https://img.shields.io/badge/-Gmail-%23333?style=for-the-badge&logo=gmail&logoColor=white" target="_blank"></a>
+  <a href="https://www.linkedin.com/in/msjujubr/" target="_blank"><img src="https://img.shields.io/badge/-LinkedIn-%230077B5?style=for-the-badge&logo=linkedin&logoColor=white" target="_blank"></a>
+</div>
+
+### Michael Yoshiaki Todoroki 
+
+<div> 
+  <a href="https://www.youtube.com/@msjujubr" target="_blank"><img src="https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white" target="_blank"></a>
+  <a href="https://instagram.com/msjujubr" target="_blank"><img src="https://img.shields.io/badge/-Instagram-%23E4405F?style=for-the-badge&logo=instagram&logoColor=white" target="_blank"></a>
+ 	<a href="https://www.twitch.tv/msjujubr" target="_blank"><img src="https://img.shields.io/badge/Twitch-9146FF?style=for-the-badge&logo=twitch&logoColor=white" target="_blank"></a>
+  <a href = "mailto:juliamourasouza10@gmail.com"><img src="https://img.shields.io/badge/-Gmail-%23333?style=for-the-badge&logo=gmail&logoColor=white" target="_blank"></a>
+  <a href="https://www.linkedin.com/in/msjujubr/" target="_blank"><img src="https://img.shields.io/badge/-LinkedIn-%230077B5?style=for-the-badge&logo=linkedin&logoColor=white" target="_blank"></a>
+</div>
+
+# Agradecimentos
