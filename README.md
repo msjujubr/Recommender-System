@@ -4,23 +4,19 @@
 ![VSCode](https://img.shields.io/badge/IDE-VSCode-informational)
 ![ISO](https://img.shields.io/badge/ISO-Linux-blueviolet)
 
- Este trabalho consiste no desenvolvimento de um sistema de recomendação que, a partir de perfis de usuários e características de itens, seja capaz de sugerir agrupamentos de elementos
- similares. Utilizando ....
- <!--- resumo da metodologia, fazer referêndcia a livros e qualquer material que utilizamos --->
- <!--- deixar os calculos por aqui também? --->
- 
 
 
- Cálculos como medida de distância euclidiana, similaridade do cosseno ou Jaccard
- devem ser considerados como alternativas. Avaliação conforme critérios de eficiência computacional, qualidade dos resultados, organização do código e documentação, conforme descrito a seguir.
   
 <div align="center"> <table> <tr> <td>
  
 ### 📖 Sumário
-- [O que são Sistemas de Recomendação?]()
+- [Introdução]()
+  - [O que são Sistemas de Recomendação?]()
+  - [Compilação e Execução]()
 - [Metodologia]()
-  - [Lógica Utilizada](#lógica-utilizada)
-  - [Comportamento](#comportamento)
+  - [Obtenção e Processamento dos Dados]()
+  - [Comportaento]()
+  - [Avaliação Geral]()
 - [Análise de Performance]()
 - [Compilação, Entradas e Saídas](#compilação-entradas-e-saídas)
   - [MakeFile](#makefile)
@@ -34,26 +30,83 @@
 
 </td> </tr> </table> </div>
 
-# O que são Sistemas de Recomendação?
+# Introdução
+ Este trabalho consiste no desenvolvimento de um sistema de recomendação que, a partir de perfis de usuários e características de itens, seja capaz de sugerir agrupamentos de elementos
+ similares. Utilizando ....
+ <!--- resumo da metodologia, fazer referêndcia a livros e qualquer material que utilizamos --->
+ <!--- deixar os calculos por aqui também? --->
+  Cálculos como medida de distância euclidiana, similaridade do cosseno ou Jaccard
+ devem ser considerados como alternativas. Avaliação conforme critérios de eficiência computacional, qualidade dos resultados, organização do código e documentação, conforme descrito a seguir.
+
+
  
+## O que são Sistemas de Recomendação?
+
+## Compilação e Execução
+ Pré-processamento: O pré-processamento deverá seguir os seguintes critérios:
+ • Utilizar apenas usuários que tenham realizado pelo menos 50 avaliações distintas.
+ • Utilizar apenas filmes avaliados por pelo menos 50 usuários.
+ • Remover registros duplicados ou inconsistentes.
+ • Gerar arquivo de entrada no seguinte formato:
+ usuario_id item_id1:nota1 item_id2:nota2 item_id3:nota3 ...
+ Exemplo: 123 12:4.0 54:3.5 76:5.0 145:2.0
+ Noteque,cadalinharepresentaumusuário(usuario_id)esuasrespectivasavaliações(item_id:nota)
+
+ Para o arquivo que será utilizado como fonte de informação para a execução das recomen
+tações, tem-se como padrões a serem seguidos:
+ Trabalho Final
+ Page 1
+• Nomedoarquivo: input.dat
+ • Localização: Diretório datasets/
+ • Formato: Texto puro (UTF-8)
+ • Necessidade: Arquivo que representará a base de dados para exploração
+
+ Já para os arquivos de exploração e de saída, espera-se que ambos sigam os seguintes
+ padrões:
+ • Nomedoarquivo: explore.dat
+ • Localização: Diretório datasets/
+ • Formato: Texto puro (UTF-8)
+ • Necessidade: Arquivo que conterá os usuários utilizados para exploração das recomen
+dações
+ • Nomedoarquivo: output.dat
+ • Localização: Diretório outcome/
+ • Formato: Texto puro (UTF-8)
+ • Necessidade: Arquivo contendo as K recomendações para cada usuário apresentados
+ no arquivo explore.da
+
+ Para
+ cada usuario_id listado, o procedimento a ser seguido consiste em:
+ • Realizar a busca na base de dados para identificar os filmes previamente avaliados por
+ este usuário.
+ • Apartir desse conjunto de avaliações, calcular a similaridade ou afinidade do usuário em
+ relação aos demais usuários da base, utilizando a métrica de distância ou similaridade
+ definida pelo projeto.
+ Trabalho Final
+ Page 2
+• Selecionar os K usuários mais similares (de maior afinidade) ao usuário em análise.
+ • Identificar os filmes avaliados positivamente pelos usuários similares, mas ainda não
+ avaliados pelo usuário-alvo, priorizando aqueles com maior grau de sobreposição de in
+teresse.
+ • Apartir dessa análise, gerar as recomendações a serem atribuídas a cada usuario_id.
+ Os resultados deste processo deverão ser armazenados no arquivo output.dat, obedecendo
+ oformato estipulado, em que cadalinha corresponde a umusuario_id seguidopelositem_ids
+ recomendados
+
+ O arquivo output.dat deverá conter o formato abaixo, sendo o número de recomendações
+ (Top-N) será definido via constante global no arquivo config.h.
+ usuario_id item_id1 item_id2 item_id3 ...
+ Exemplo: 123 54 76 145
 
 # Metodologia
 
 ## Lógica Utilizada
 
-***É possível visualizar o processo baixando o [fluxograma](docs/imgs/fluxograma.png) contido neste repositório.***
+**negrito**
+*italico*
 
 | Função            | Descrição                                                  |
 |-------------------|------------------------------------------------------------|
-| [`bool atividade_fogo()`](https://github.com/msjujubr/Atividade01/blob/main/src/config.cpp#L260)  | Retorna true (1) caso ainda há árvores para serem queimadas.  |
-| [`void configuracoes()`](https://github.com/msjujubr/Atividade01/blob/main/src/config.cpp#L28) | Processa o arquivo Input.dat e armazena as informações nas variáveis globais; Inicializa o animal |
-| [`int defVento()`](https://github.com/msjujubr/Atividade01/blob/main/src/config.cpp#L8)     | Retorna um número de acordo com o caso de vento (tabela abaixo) |
-| [`void inicio_animal()`](https://github.com/msjujubr/Atividade01/blob/main/src/config.cpp#L265)    | Inicializa as variáveis do animal; Gera uma coordenada aleatória entre os 0 e 1 disponíveis na matriz para ser a posição inicial do animal na simulação |
-| [`void prop(int x, int y, vector<pair<int,int>>& auxiliar)`](https://github.com/msjujubr/Atividade01/blob/main/src/config.cpp#L286) | Confere se na posição (x, y) tem uma árvore saudável (1), se caso afirmativo, queima (2) e armazena no vetor |
-| [`void propagacao()`](https://github.com/msjujubr/Atividade01/blob/main/src/config.cpp#L67)     | Espalha o fogo de acordo com o caso de vento; Para todas as árvores que queimaram na iteração anterior (arv_1_2), pega os vizinhos possíveis e chama a função prop() para cada um; As árvores em arv_1_2 vão para o vetor arv_2_3 e as novas árvores queimadas são armazenadas em arv_1_2. |
-| [`void queimada()`](https://github.com/msjujubr/Atividade01/blob/main/src/config.cpp#L295)  | Define como queimadas (3) todas as árvores do vetor arv_2_3 |
-| [`void salvar()`](https://github.com/msjujubr/Atividade01/blob/main/src/config.cpp#L241)    |  Salva a matriz e as coordenadas do animal |
-| [`void relatorio()`](https://github.com/msjujubr/Atividade01/blob/main/src/config.cpp#L249) | Salva a quantidade de passos do animal e o estado dele ao final do programa |
+| [`nomw`](link)  | resumo da função  |
 
 ## Comportamento
 Assim como no [Jogo da Vida][1] (J. Conway, 1970), a propagação do fogo na matriz é baseada em *Autômatos Celulares*, um modelo computacional introduzido por John von Neumann e amplamente explorado por Stephen Wolfram em sua obra: [A New Kind of Science (2002)][2]. Autômatos celulares consistem em células organizadas em uma grade, onde cada célula possui um estado (como “árvore”, “fogo” ou “zona segura” dentro da matriz "floresta") e evolui ao longo do tempo de acordo com regras locais e discretas. Essa abordagem é ideal para simular fenômenos naturais como incêndios florestais, ou condições de vida como no jogo do Conway, em que cada célula depende do estado de suas vizinhas.
