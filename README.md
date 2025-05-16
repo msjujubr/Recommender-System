@@ -4,9 +4,6 @@
 ![VSCode](https://img.shields.io/badge/IDE-VSCode-informational)
 ![ISO](https://img.shields.io/badge/ISO-Linux-blueviolet)
 
-
-
-  
 <div align="center"> <table> <tr> <td>
  
 ### 📖 Sumário
@@ -15,9 +12,9 @@
   - [Compilação e Execução]()
 - [Metodologia]()
   - [Obtenção e Processamento dos Dados]()
+- [Análise de Performance]()
   - [Comportaento]()
   - [Avaliação Geral]()
-- [Análise de Performance]()
 - [Compilação, Entradas e Saídas](#compilação-entradas-e-saídas)
   - [MakeFile](#makefile)
   - [Input.dat](#inputdat)
@@ -127,15 +124,9 @@ Este apresenta os seguintes comandos:
 [Script do Makefile utilizado (C++)](Makefile)
 
 # Referências
-- [Documento Prática](docs/documento_atividade01.pdf)
-- [1]: https://youtu.be/NqUSJWec3pM?si=C33oaYJOJ01Xs7y5  
-  *Vídeo do Cosmopolita explicando o Jogo da Vida*
-- [2]: https://archive.org/details/a-new-kind-of-science-stephen-wolfram-z-lib.org/mode/2up
-  *Livro completo: A New Kind of Science – Stephen Wolfram (2002)*
-- [3]: https://github.com/MasterGos/magisterka/blob/master/Materialy%20z%20sieci/AOP/Wiley%20-%20Wooldridge,%20An%20Introduction%20to%20Multi%20Agent%20Systems%20(OCR%20guaranteed%20on%20full%20book).pdf
-  *Link do GitHub do magisterka com o livro: An Introduction to Multi Agent Systems - Michael Wooldridge*
-- [4]: https://direct.mit.edu/books/monograph/2503/Growing-Artificial-SocietiesSocial-Science-from
-  *Livro no MIT Press: Growing Artificial Societies: Social Science from the Bottom Up (1996)*
+- [Documento - Trabalho Final](docs/documento_atividade01.pdf)
+- [1]: https://doi.org/10.1145/2827872
+- *F. Maxwell Harper and Joseph A. Konstan. 2015. The MovieLens Datasets: History and Context. ACM Transactions on Interactive Intelligent Systems (TiiS) 5, 4: 19:1–19:19.*
 
 <div> 
   <a href="https://www.youtube.com/@msjujubr" target="_blank"><img src="https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white" target="_blank"></a>
