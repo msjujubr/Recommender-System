@@ -4,11 +4,15 @@
 ![VSCode](https://img.shields.io/badge/IDE-VSCode-informational)
 ![ISO](https://img.shields.io/badge/ISO-Linux-blueviolet)
 
- O trabalho consiste no desenvolvimento de um sistema de recomendação que, a partir de perfis de usuários e características de itens, seja capaz de sugerir agrupamentos de elementos
- similares. Cálculos como medida de distância euclidiana, similaridade do cosseno ou Jaccard
- devemserconsiderados comoalternativas. As equipes, formadas por no máximo cinco alunos,
- serão avaliadas conforme critérios de eficiência computacional, qualidade dos resultados, or
-ganização do código e documentação, conforme descrito a seguir.
+ Este trabalho consiste no desenvolvimento de um sistema de recomendação que, a partir de perfis de usuários e características de itens, seja capaz de sugerir agrupamentos de elementos
+ similares. Utilizando ....
+ <!--- resumo da metodologia, fazer referêndcia a livros e qualquer material que utilizamos --->
+ <!--- deixar os calculos por aqui também? --->
+ 
+
+
+ Cálculos como medida de distância euclidiana, similaridade do cosseno ou Jaccard
+ devem ser considerados como alternativas. Avaliação conforme critérios de eficiência computacional, qualidade dos resultados, organização do código e documentação, conforme descrito a seguir.
   
 <div align="center"> <table> <tr> <td>
  
