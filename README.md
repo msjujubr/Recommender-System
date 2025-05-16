@@ -30,7 +30,7 @@
 
 </td> <td>
 
- <img src="" width="300">
+ <img src="imgs/fluxograma.png" width="400">
 
 </td> </tr> </table> </div>
 
