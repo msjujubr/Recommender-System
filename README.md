@@ -51,10 +51,9 @@
  • Gerar arquivo de entrada no seguinte formato:
  usuario_id item_id1:nota1 item_id2:nota2 item_id3:nota3 ...
  Exemplo: 123 12:4.0 54:3.5 76:5.0 145:2.0
- Noteque,cadalinharepresentaumusuário(usuario_id)esuasrespectivasavaliações(item_id:nota)
-
- Para o arquivo que será utilizado como fonte de informação para a execução das recomen
-tações, tem-se como padrões a serem seguidos:
+ Note que, cada linha representa um usuário (usuario_id) e suas respectivas avaliações (item_id:nota)
+ 
+ Para o arquivo que será utilizado como fonte de informação para a execução das recomendações, tem-se como padrões a serem seguidos:
  Trabalho Final
  Page 1
 • Nomedoarquivo: input.dat
@@ -64,33 +63,31 @@ tações, tem-se como padrões a serem seguidos:
 
  Já para os arquivos de exploração e de saída, espera-se que ambos sigam os seguintes
  padrões:
- • Nomedoarquivo: explore.dat
+ • Nome do arquivo: explore.dat
  • Localização: Diretório datasets/
  • Formato: Texto puro (UTF-8)
  • Necessidade: Arquivo que conterá os usuários utilizados para exploração das recomen
 dações
- • Nomedoarquivo: output.dat
+ • Nome do arquivo: output.dat
  • Localização: Diretório outcome/
  • Formato: Texto puro (UTF-8)
  • Necessidade: Arquivo contendo as K recomendações para cada usuário apresentados
- no arquivo explore.da
+ no arquivo explore.dat
 
- Para
- cada usuario_id listado, o procedimento a ser seguido consiste em:
+ Para cada usuario_id listado, o procedimento a ser seguido consiste em:
  • Realizar a busca na base de dados para identificar os filmes previamente avaliados por
  este usuário.
- • Apartir desse conjunto de avaliações, calcular a similaridade ou afinidade do usuário em
+ • A partir desse conjunto de avaliações, calcular a similaridade ou afinidade do usuário em
  relação aos demais usuários da base, utilizando a métrica de distância ou similaridade
  definida pelo projeto.
  Trabalho Final
  Page 2
 • Selecionar os K usuários mais similares (de maior afinidade) ao usuário em análise.
  • Identificar os filmes avaliados positivamente pelos usuários similares, mas ainda não
- avaliados pelo usuário-alvo, priorizando aqueles com maior grau de sobreposição de in
-teresse.
- • Apartir dessa análise, gerar as recomendações a serem atribuídas a cada usuario_id.
+ avaliados pelo usuário-alvo, priorizando aqueles com maior grau de sobreposição de interesse.
+ • A partir dessa análise, gerar as recomendações a serem atribuídas a cada usuario_id.
  Os resultados deste processo deverão ser armazenados no arquivo output.dat, obedecendo
- oformato estipulado, em que cadalinha corresponde a umusuario_id seguidopelositem_ids
+ o formato estipulado, em que cada linha corresponde a um usuario_id seguido pelos item_ids
  recomendados
 
  O arquivo output.dat deverá conter o formato abaixo, sendo o número de recomendações
