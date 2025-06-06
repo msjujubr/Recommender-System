@@ -7,22 +7,22 @@
 <div align="center"> <table> <tr> <td>
  
 ### 📖 Sumário
-- [Introdução]()
-  - [O que são Sistemas de Recomendação?]()
-  - [Objetivos do Trabalho]()
-  - [Organização do Trabalho]()
-- [Metodologia]()
-  - [Obtenção e Processamento dos Dados]()
-  - [Ferramentas Utilizadas]()
-- [Análise de Performance]()
-  - [Comportamento]()
-  - [Avaliação Geral]()
+- [Introdução](#introducao)
+  - [O que são Sistemas de Recomendação?](#o-que-sao-sistemas-de-recomendacao)
+  - [Objetivos do Trabalho](#objetivos-do-Trabalho)
+- [Metodologia](#metodologia)
+  - [Organização do Trabalho](#organizacao-do-trabalho)
+  - [Processamento dos Dados](#processamento-dos-dados)
+  - [Ferramentas Utilizadas](#ferramentas-utilizadas)
+- [Análise de Performance](#analise-de-performance)
+  - [Comportamento](#comportamento)
+  - [Avaliação Geral](#avaliacao-geral)
 - [Compilação e Execução](#compilação-entradas-e-saídas)
-  - [MakeFile]()
-  - [Input.dat]()
-  - [Explore.dat]()
-  - [Output.dat]()
-- [Conclusão]()
+  - [MakeFile](#makefile)
+  - [Input.dat](#input.dat)
+  - [Explore.dat](#explore.dat)
+  - [Output.dat](#output.dat)
+- [Conclusão](#conclusao)
 - [Referências](#referências)
 - [Autores](#autores)
 - [Agradecimentos](#agradecimentos)
@@ -142,7 +142,7 @@ Este trabalho foi realizado por:
   <a href="https://www.linkedin.com/in/msjujubr/" target="_blank"><img src="https://img.shields.io/badge/-LinkedIn-%230077B5?style=for-the-badge&logo=linkedin&logoColor=white" target="_blank"></a>
 </div>
 
-### Júlia de Moura Souza
+### Arthur de Oliveira Mendonça 
 
 <div> 
   <a href="https://www.youtube.com/@msjujubr" target="_blank"><img src="https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white" target="_blank"></a>
@@ -152,7 +152,18 @@ Este trabalho foi realizado por:
   <a href="https://www.linkedin.com/in/msjujubr/" target="_blank"><img src="https://img.shields.io/badge/-LinkedIn-%230077B5?style=for-the-badge&logo=linkedin&logoColor=white" target="_blank"></a>
 </div>
 
-### Michael Yoshiaki Todoroki 
+### João Antônio 
+
+<div> 
+  <a href="https://www.youtube.com/@msjujubr" target="_blank"><img src="https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white" target="_blank"></a>
+  <a href="https://instagram.com/msjujubr" target="_blank"><img src="https://img.shields.io/badge/-Instagram-%23E4405F?style=for-the-badge&logo=instagram&logoColor=white" target="_blank"></a>
+ 	<a href="https://www.twitch.tv/msjujubr" target="_blank"><img src="https://img.shields.io/badge/Twitch-9146FF?style=for-the-badge&logo=twitch&logoColor=white" target="_blank"></a>
+  <a href = "mailto:juliamourasouza10@gmail.com"><img src="https://img.shields.io/badge/-Gmail-%23333?style=for-the-badge&logo=gmail&logoColor=white" target="_blank"></a>
+  <a href="https://www.linkedin.com/in/msjujubr/" target="_blank"><img src="https://img.shields.io/badge/-LinkedIn-%230077B5?style=for-the-badge&logo=linkedin&logoColor=white" target="_blank"></a>
+</div>
+
+
+### Júlia de Moura Souza
 
 <div> 
   <a href="https://www.youtube.com/@msjujubr" target="_blank"><img src="https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white" target="_blank"></a>
