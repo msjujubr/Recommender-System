@@ -99,6 +99,104 @@ dações
 
 ## Lógica Utilizada
 
+A lógica de desenvolvimento do sistema de recomendação segue uma ordem de implementação que consiste em:
+
+```mermaid
+ flowchart TD
+    A[Início do Programa] --> B{Carregar e Pré-processar Dados}
+    B --> C[Ler ratings.csv]
+    C --> D{Aplicar Filtros:}
+    D --> D1[minUsuario = 50 avaliações]
+    D --> D2[minFilme = 50 avaliações]
+    D1 --> E[Gerar datasets/input.dat]
+    D2 --> E
+    E --> F[Gerar Matriz Esparsa de Usuários]
+    F --> F1[Normalizar Matriz para Similaridade de Cosseno]
+    F1 --> G{Configurar LSH com Projeções Aleatórias}
+    G --> G1[Definir num_projections e num_bands]
+    G1 --> H[Indexar Matriz de Usuários no LSH]
+    H --> I[Ler Usuários para Exploração - explore.dat]
+    I --> J{Para cada Usuário a Recomendar:}
+    J --> J1[Consultar Vizinhos Candidatos via LSH]
+    J1 --> J2[Calcular Similaridade de Cosseno]
+    J2 --> J3[Selecionar Top-K Usuários Mais Similares]
+    J3 --> J4[Gerar Recomendações Top-N com base nos Top-K Vizinhos]
+    J4 --> K[Escrever Recomendações em outputs.dat]
+    K --> L[Fim do Programa]
+
+
+```
+
+### Pré-processamento
+
+### Aplicação de Filtros
+
+### Gerar Input
+
+### Criação da Matriz Esparsa
+
+A partir de input.dat, é construída uma matriz de usuários esparsa. Essa matriz é representada internamente por um `unordered_map<int, unordered_map<int, float>>`, onde:
+
+- A primeira chave (int) é o userId.
+
+- O unordered_map interno mapeia movieId `int` para a nota `float`.
+
+A matriz implementada é esparsa e armazena apenas avaliações existentes (não-nulas), economizando memória significativa para um dataset massivo como o MovieLens 25M.
+
+Durante a construção, também é criado um mapeamento de movieId para um índice contínuo `filme_indice`, essencial para o alinhamento com os vetores de projeção aleatória do LSH.
+
+As avaliações de cada usuário são normalizadas (divididas pela norma L2 de seu vetor de avaliações) para que o produto escalar direto possa ser usado para calcular a Similaridade de Cosseno (esta parte é feita pela função `normalizarMatriz`) .
+
+Por fim, a matriz esparsa de usuários fica no seguinte formato:
+
+| Usuário ID | Filme 101 | Filme 205 | Filme 330 | Filme 402 | ... |
+|------------|-----------|-----------|-----------|-----------|-----|
+| 1001       | 0.25      | 0.43      | ---       | 0.77      | ... |
+| 1002       | ---       | 0.58      | 0.64      | ---       | ... |
+| 1003       | 0.36      | ---       | 0.49      | 0.61      | ... |
+| ...        | ...       | ...       | ...       | ...       | ... |
+
+- `---` indica ausência de avaliação (zero implícito na matriz esparsa).
+- Os valores são **notas já normalizadas** (norma L2 = 1 por linha).
+
+### Implementar LSH com Random Projections
+
+### Definir num_projections e num_bands
+
+### Ler Usuário Para Recomendação (explore.dat)
+
+A leitura de usuários para recomendação é feita com base em um arquivo `explore.dat`, estes usuários receberão as recomendações. Esta leitura é feita pela função `explorador`.
+
+- A função começa abrindo o arquivo explore.dat, que está localizado dentro da pasta datasets/.
+
+- Um loop while (arquivo >> userId) lê os IDs dos usuários. Este método de leitura é eficiente para arquivos onde cada ID está em uma linha separada ou são separados por espaços. Ele continua lendo enquanto houver inteiros válidos no arquivo.
+
+- Cada userId lido é imediatamente adicionado a `vector<int> usuarios`, que acumula todos os identificadores.
+
+- Após ler todos os IDs, o arquivo é fechado para liberar os recursos.
+
+- Por fim a função retorna o vetor usuarios, que agora contém a lista completa de IDs de usuários para os quais o sistema deve processar as recomendações.
+
+### Definir Vizinhos Candidatos com o LSH
+
+### Calcular Similaridade de Cosseno entre Usuários e Vizinhos
+
+A função `similaridade_cosseno` é implementada para tirar proveito da normalização prévida das notas dos usuários. Ela recebe dois `unordered_map`s que representam os vetores de avaliação esparsos dos usuários (já normalizados).
+
+A função `similaridade_cosseno`:
+
+- Percorre os filmes avaliados por um usuário (userA).
+
+- Para cada filme avaliado por userA, verifica se o outro usuário (userB) também avaliou o mesmo filme (userB.count(filmeID)).
+
+- Se sim, o produto das notas (já normalizadas) desses filmes é somado (notaA * userB.at(filmeID)).
+
+- O resultado final é o produto escalar, que, devido à normalização prévia, é diretamente a similaridade de cosseno.
+
+### Gerar Recomendações com Base nos Melhores Vizinhos
+
+
+
 **negrito**
 *italico*
 
