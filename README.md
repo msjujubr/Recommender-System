@@ -161,7 +161,59 @@ Por fim, a matriz esparsa de usuários fica no seguinte formato:
 
 ### Implementar LSH com Random Projections
 
-### Definir num_projections e num_bands
+A implementação do Locality Sensitive Hashing (LSH) com Projeções Aleatórias no código segue um fluxo bem definido para permitir a busca eficiente de vizinhos aproximados em espaços de alta dimensionalidade. A ideia central é mapear vetores de alta dimensão (as avaliações dos usuários) para assinaturas binárias (hashes) menores, de forma que vetores similares tenham hashes similares.
+
+A estrutura principal que encapsula o índice LSH é `LSHIndex`, definida como:
+
+- `random_hyperplanes`: Um `vector` de `vector<float>`, onde cada `vector<float>` representa um hiperplano aleatório. O tamanho interno de cada hiperplano é igual ao número total de filmes únicos (`uniqueMovies.size()`).
+
+- `user_signatures`: Um `unordered_map` que armazena a assinatura LSH completa (`LSHSignature`, um `vector<bool>`) para cada `userID`.
+
+- `lsh_buckets`: Um vector de `unordered_map<string, vector<int>>`. Cada elemento no vector representa uma banda (`L`). O `unordered_map` interno mapeia a chave da banda (a string binária da porção da assinatura) para um vector de `userID`s que caem naquele balde para aquela banda específica.
+
+- `filme_id_to_index`: Um u`nordered_map` crucial que mapeia o `filmeID` real para seu índice na representação densa dos vetores (necessário para alinhar as avaliações dos usuários com as dimensões dos hiperplanos).
+
+- `unique_movies_ordered`: Um `vector<int>` que mantém os IDs dos filmes únicos em uma ordem consistente, usada para definir as dimensões dos hiperplanos.
+
+  A construção do índice LSH envolve os seguintes passos, realizados pela função construirIndiceLSH:
+
+#### Geração de Hiperplanos Aleatórios:
+
+- Um conjunto de `config::numHiperplanos` vetores aleatórios é gerado. Cada vetor tem `uniqueMovies.size()` dimensões, com seus componentes amostrados de uma distribuição normal padrão (média 0, desvio padrão 1). Estes vetores são armazenados em `random_hyperplanes`.
+
+#### Criação das Assinaturas de Hash para Cada Usuário:
+
+- Para cada usuário na `userMatrix`:
+  - Um produto escalar é calculado entre o vetor de avaliações normalizadas do usuário e cada um dos `random_hyperplanes`.
+  - O sinal do produto escalar (>= 0 ou < 0) determina um bit (true ou false) na assinatura LSH do usuário.
+  - Esses bits são concatenados para formar a `LSHSignature` completa do usuário, que é então armazenada em `user_signatures`.
+
+#### Agrupamento em Baldes (Bucketing):
+
+- As assinaturas LSH de cada usuário são divididas em `config::numBandas` bandas.
+- Para cada banda:
+  - A porção da assinatura correspondente à banda é extraída.
+  - Essa porção é convertida em uma string binária (e.g., "0101").
+  - Esta string serve como chave para um balde dentro da `lsh_buckets` para a banda atual. Todos os `userID`s que possuem a mesma porção de assinatura nessa banda são colocados no mesmo balde.
+
+ Este processo resulta em um índice LSH que pode ser eficientemente consultado para encontrar usuários candidatos similares, que serão então refinados por um cálculo de similaridade de cosseno completo.
+  
+
+### Definir numHiperplanos e numBandas
+
+As constantes `numHiperplanos` (número total de projeções/bits na assinatura) e `numBandas` (número de bandas para o bucketing LSH) são parâmetros cruciais na configuração do algoritmo LSH. Elas são definidas no arquivo `config.hpp` e diretamente controlam o "trade-off" entre a precisão (capacidade de encontrar vizinhos verdadeiros) e a eficiência (velocidade da busca) do sistema LSH.
+
+- `numHiperplanos`:
+  - Finalidade: Define o número de hiperplanos aleatórios que serão gerados. Cada hiperplano contribui com um bit (0 ou 1) para a assinatura LSH completa de um usuário.
+  - Impacto: Um número maior de numHiperplanos resulta em assinaturas LSH mais longas, o que geralmente aumenta a precisão (a capacidade de distinguir usuários diferentes) mas também pode aumentar o tempo de construção e consulta do índice. No código, está definido como 24.
+
+- `numBandas`:
+  - Finalidade: Determina em quantas partes (`L`) a assinatura LSH completa será dividida. Para cada banda, uma sub-assinatura é formada e usada para o bucketing (agrupamento de usuários).
+  - Impacto: Um número maior de `numBandas` significa que a assinatura é dividida em mais partes menores. Isso aumenta a probabilidade de que usuários similares caiam no mesmo balde em pelo menos uma banda, o que pode melhorar o "recall" (a capacidade de encontrar todos os vizinhos verdadeiros). No código, está definido como 6.
+ 
+ - `bitsPorBanda`:
+   - Finalidade: Define quantos bits de cada assinatura LSH farão parte de uma única banda.
+   - Relação: Esta constante está intrinsecamente ligada a numHiperplanos e `numBandas`. A relação fundamental no LSH com Projeções Aleatórias é que o número total de bits (`numHiperplanos`) deve ser igual ao produto do número de bandas pelo número de bits por banda: `numHiperplanos` = `numBandas` * `bitsPorBanda`
 
 ### Ler Usuário Para Recomendação (explore.dat)
 
@@ -178,6 +230,8 @@ A leitura de usuários para recomendação é feita com base em um arquivo `expl
 - Por fim a função retorna o vetor usuarios, que agora contém a lista completa de IDs de usuários para os quais o sistema deve processar as recomendações.
 
 ### Definir Vizinhos Candidatos com o LSH
+
+
 
 ### Calcular Similaridade de Cosseno entre Usuários e Vizinhos
 
