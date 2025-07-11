@@ -9,7 +9,6 @@
 ### 📖 Sumário
 - [Introdução](#introducao)
 - [Metodologia](#metodologia)
-  - [Organização do Trabalho](#organizacao-do-trabalho)
   - [Processamento dos Dados](#processamento-dos-dados)
   - [Sistema de Recomendação](#sistema-de-recomendacao)
 - [Compilação e Execução](#compilação-e-execucao)
@@ -23,9 +22,7 @@
 - [Agradecimentos](#agradecimentos)
 
 </td> <td>
-
  <img src="imgs/fluxograma.png" width="400">
-
 </td> </tr> </table> </div>
 
 # Introdução
@@ -37,9 +34,7 @@
  
 # Metodologia
 
-## Organização do Trabalho
-A lógica de desenvolvimento do sistema de recomendação segue uma ordem de implementação segue o fluxograma abaixo:
-
+***Organização do Trabalho***: A lógica de desenvolvimento do sistema de recomendação segue a ordem de implementação do fluxograma abaixo:
 <details>
 <summary>📊 Fluxo do Algoritmo (clique para expandir)</summary>
 
@@ -189,6 +184,7 @@ A função `similaridade_cosseno`:
 
 
 # Compilação e Execução
+## Dataset
  *Pré-processamento:* O pré-processamento deverá seguir os seguintes critérios:
  
     • Utilizar apenas usuários que tenham realizado pelo menos 50 avaliações distintas.
@@ -240,21 +236,6 @@ dações
  usuario_id item_id1 item_id2 item_id3 ...
  Exemplo: 123 54 76 145
 
-
-
-
-# Análise de Performance 
-**negrito**
-*italico*
-
-| Função            | Descrição                                                  |
-|-------------------|------------------------------------------------------------|
-| [`nomw`](link)  | resumo da função  |
-
-## Comportamento
-Assim como no [Jogo da Vida][1] (J. Conway, 1970), a propagação do fogo na matriz é baseada em *Autômatos Celulares*, um modelo computacional introduzido por John von Neumann e amplamente explorado por Stephen Wolfram em sua obra: [A New Kind of Science (2002)][2]. Autômatos celulares consistem em células organizadas em uma grade, onde cada célula possui um estado (como “árvore”, “fogo” ou “zona segura” dentro da matriz "floresta") e evolui ao longo do tempo de acordo com regras locais e discretas. Essa abordagem é ideal para simular fenômenos naturais como incêndios florestais, ou condições de vida como no jogo do Conway, em que cada célula depende do estado de suas vizinhas.
-
-# Compilação, Entradas e Saídas
 ## Makefile
 O programa é executado por um Makefile, arquivo de texto que automatiza o processo de compilação, que interage com todos os arquivos dentro da pasta "src". 
 Este apresenta os seguintes comandos:
@@ -268,6 +249,20 @@ Este apresenta os seguintes comandos:
 &nbsp;&nbsp;&nbsp;&nbsp;**make c:** make clean + make run
 
 [Script do Makefile utilizado (C++)](Makefile)
+
+
+
+
+# Análise de Performance 
+**negrito**
+*italico*
+
+| Função            | Descrição                                                  |
+|-------------------|------------------------------------------------------------|
+| [`nomw`](link)  | resumo da função  |
+
+## Comportamento
+Assim como no [Jogo da Vida][1] (J. Conway, 1970), a propagação do fogo na matriz é baseada em *Autômatos Celulares*, um modelo computacional introduzido por John von Neumann e amplamente explorado por Stephen Wolfram em sua obra: [A New Kind of Science (2002)][2]. Autômatos celulares consistem em células organizadas em uma grade, onde cada célula possui um estado (como “árvore”, “fogo” ou “zona segura” dentro da matriz "floresta") e evolui ao longo do tempo de acordo com regras locais e discretas. Essa abordagem é ideal para simular fenômenos naturais como incêndios florestais, ou condições de vida como no jogo do Conway, em que cada célula depende do estado de suas vizinhas.
 
 ## Avaliação Geral
  Avaliação conforme critérios de eficiência computacional, qualidade dos resultados, organização do código e documentação, conforme descrito a seguir.
