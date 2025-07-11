@@ -10,8 +10,8 @@
 - [Introdução](#introducao)
 - [Metodologia](#metodologia)
   - [Organização do Trabalho](#organizacao-do-trabalho)
-  - [Ferramentas Utilizadas](#ferramentas-utilizadas)
   - [Processamento dos Dados](#processamento-dos-dados)
+  - [Sistema de Recomendação](#sistema-de-recomendacao)
 - [Compilação e Execução](#compilação-e-execucao)
   - [Dataset](#dataset)
   - [MakeFile](#makefile)
@@ -69,11 +69,7 @@ flowchart TD
  ```
 </details>
 
-### Pré-processamento
-
-### Aplicação de Filtros
-
-### Gerar Input
+### Processamento dos Dados
 
 ### Criação da Matriz Esparsa
 
