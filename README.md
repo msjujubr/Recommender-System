@@ -8,19 +8,16 @@
  
 ### 📖 Sumário
 - [Introdução](#introducao)
--  [Metodologia](#metodologia)
+- [Metodologia](#metodologia)
   - [Organização do Trabalho](#organizacao-do-trabalho)
-  - [Processamento dos Dados](#processamento-dos-dados)
   - [Ferramentas Utilizadas](#ferramentas-utilizadas)
+  - [Processamento dos Dados](#processamento-dos-dados)
+- [Compilação e Execução](#compilação-e-execucao)
+  - [Dataset](#dataset)
+  - [MakeFile](#makefile)
 - [Análise de Performance](#analise-de-performance)
   - [Comportamento](#comportamento)
   - [Avaliação Geral](#avaliacao-geral)
-- [Compilação e Execução](#compilação-entradas-e-saídas)
-  - [MakeFile](#makefile)
-  - [Input.dat](#input.dat)
-  - [Explore.dat](#explore.dat)
-  - [Output.dat](#output.dat)
-- [Conclusão](#conclusao)
 - [Referências](#referências)
 - [Autores](#autores)
 - [Agradecimentos](#agradecimentos)
@@ -38,66 +35,16 @@
  
  Este trabalho consiste no desenvolvimento de um sistema de recomendação do tipo 'filtragem colaborativa', que, a partir de perfis de usuários e características de itens, seja capaz de sugerir agrupamentos de elementos similares. Utilizando o algoritmo LSH,  <!-- RESUMO -->, e um modelo de tabela hash "Robin Hood", que <!-- RESUMO -->. aplicados em *Multithreads* (paralelismo), afim de otimizar o sistema.
  
-## Compilação e Execução
- *Pré-processamento:* O pré-processamento deverá seguir os seguintes critérios:
- 
-    • Utilizar apenas usuários que tenham realizado pelo menos 50 avaliações distintas.
-    • Utilizar apenas filmes avaliados por pelo menos 50 usuários.
-    • Remover registros duplicados ou inconsistentes.
-    • Gerar arquivo de entrada no seguinte formato: _usuario_id item_id1:nota1 item_id2:nota2 item_id3:nota3 ..._
- Exemplo: 123 12:4.0 54:3.5 76:5.0 145:2.0
- Note que, cada linha representa um usuário (usuario_id) e suas respectivas avaliações (item_id:nota)
- 
- Para o arquivo que será utilizado como fonte de informação para a execução das recomendações, tem-se como padrões a serem seguidos:
- Trabalho Final
- Page 1
-• Nomedoarquivo: input.dat
- • Localização: Diretório datasets/
- • Formato: Texto puro (UTF-8)
- • Necessidade: Arquivo que representará a base de dados para exploração
-
- Já para os arquivos de exploração e de saída, espera-se que ambos sigam os seguintes
- padrões:
- • Nome do arquivo: explore.dat
- • Localização: Diretório datasets/
- • Formato: Texto puro (UTF-8)
- • Necessidade: Arquivo que conterá os usuários utilizados para exploração das recomen
-dações
- • Nome do arquivo: output.dat
- • Localização: Diretório outcome/
- • Formato: Texto puro (UTF-8)
- • Necessidade: Arquivo contendo as K recomendações para cada usuário apresentados
- no arquivo explore.dat
-
- Para cada usuario_id listado, o procedimento a ser seguido consiste em:
- • Realizar a busca na base de dados para identificar os filmes previamente avaliados por
- este usuário.
- • A partir desse conjunto de avaliações, calcular a similaridade ou afinidade do usuário em
- relação aos demais usuários da base, utilizando a métrica de distância ou similaridade
- definida pelo projeto.
- Trabalho Final
- Page 2
-• Selecionar os K usuários mais similares (de maior afinidade) ao usuário em análise.
- • Identificar os filmes avaliados positivamente pelos usuários similares, mas ainda não
- avaliados pelo usuário-alvo, priorizando aqueles com maior grau de sobreposição de interesse.
- • A partir dessa análise, gerar as recomendações a serem atribuídas a cada usuario_id.
- Os resultados deste processo deverão ser armazenados no arquivo output.dat, obedecendo
- o formato estipulado, em que cada linha corresponde a um usuario_id seguido pelos item_ids
- recomendados
-
- O arquivo output.dat deverá conter o formato abaixo, sendo o número de recomendações
- (Top-N) será definido via constante global no arquivo config.h.
- usuario_id item_id1 item_id2 item_id3 ...
- Exemplo: 123 54 76 145
-
 # Metodologia
 
-## Lógica Utilizada
+## Organização do Trabalho
+A lógica de desenvolvimento do sistema de recomendação segue uma ordem de implementação segue o fluxograma abaixo:
 
-A lógica de desenvolvimento do sistema de recomendação segue uma ordem de implementação que consiste em:
+<details>
+<summary>📊 Fluxo do Algoritmo (clique para expandir)</summary>
 
 ```mermaid
- flowchart TD
+flowchart TD
     A[Início do Programa] --> B{Carregar e Pré-processar Dados}
     B --> C[Ler ratings.csv]
     C --> D{Aplicar Filtros:}
@@ -119,8 +66,8 @@ A lógica de desenvolvimento do sistema de recomendação segue uma ordem de imp
     J4 --> K[Escrever Recomendações em outputs.dat]
     K --> L[Fim do Programa]
 
-
-```
+ ```
+</details>
 
 ### Pré-processamento
 
@@ -243,6 +190,61 @@ A função `similaridade_cosseno`:
 - O resultado final é o produto escalar, que, devido à normalização prévia, é diretamente a similaridade de cosseno.
 
 ### Gerar Recomendações com Base nos Melhores Vizinhos
+
+
+# Compilação e Execução
+ *Pré-processamento:* O pré-processamento deverá seguir os seguintes critérios:
+ 
+    • Utilizar apenas usuários que tenham realizado pelo menos 50 avaliações distintas.
+    • Utilizar apenas filmes avaliados por pelo menos 50 usuários.
+    • Remover registros duplicados ou inconsistentes.
+    • Gerar arquivo de entrada no seguinte formato: _usuario_id item_id1:nota1 item_id2:nota2 item_id3:nota3 ..._
+ Exemplo: 123 12:4.0 54:3.5 76:5.0 145:2.0
+ Note que, cada linha representa um usuário (usuario_id) e suas respectivas avaliações (item_id:nota)
+ 
+ Para o arquivo que será utilizado como fonte de informação para a execução das recomendações, tem-se como padrões a serem seguidos:
+ Trabalho Final
+ Page 1
+• Nomedoarquivo: input.dat
+ • Localização: Diretório datasets/
+ • Formato: Texto puro (UTF-8)
+ • Necessidade: Arquivo que representará a base de dados para exploração
+
+ Já para os arquivos de exploração e de saída, espera-se que ambos sigam os seguintes
+ padrões:
+ • Nome do arquivo: explore.dat
+ • Localização: Diretório datasets/
+ • Formato: Texto puro (UTF-8)
+ • Necessidade: Arquivo que conterá os usuários utilizados para exploração das recomen
+dações
+ • Nome do arquivo: output.dat
+ • Localização: Diretório outcome/
+ • Formato: Texto puro (UTF-8)
+ • Necessidade: Arquivo contendo as K recomendações para cada usuário apresentados
+ no arquivo explore.dat
+
+ Para cada usuario_id listado, o procedimento a ser seguido consiste em:
+ • Realizar a busca na base de dados para identificar os filmes previamente avaliados por
+ este usuário.
+ • A partir desse conjunto de avaliações, calcular a similaridade ou afinidade do usuário em
+ relação aos demais usuários da base, utilizando a métrica de distância ou similaridade
+ definida pelo projeto.
+ Trabalho Final
+ Page 2
+• Selecionar os K usuários mais similares (de maior afinidade) ao usuário em análise.
+ • Identificar os filmes avaliados positivamente pelos usuários similares, mas ainda não
+ avaliados pelo usuário-alvo, priorizando aqueles com maior grau de sobreposição de interesse.
+ • A partir dessa análise, gerar as recomendações a serem atribuídas a cada usuario_id.
+ Os resultados deste processo deverão ser armazenados no arquivo output.dat, obedecendo
+ o formato estipulado, em que cada linha corresponde a um usuario_id seguido pelos item_ids
+ recomendados
+
+ O arquivo output.dat deverá conter o formato abaixo, sendo o número de recomendações
+ (Top-N) será definido via constante global no arquivo config.h.
+ usuario_id item_id1 item_id2 item_id3 ...
+ Exemplo: 123 54 76 145
+
+
 
 
 # Análise de Performance 
