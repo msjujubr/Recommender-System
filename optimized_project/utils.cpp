@@ -43,6 +43,27 @@ void gerarExploreFile(const string& input_file, const string& explore_file, int 
     cout << "Arquivo explore.dat criado com " << actual_sample << " usuários" << endl;
 }
 
+void gerarExploreFileFromVector(const vector<int>& users, const string& explore_file, int sample_size) {
+    vector<int> all_users = users;
+    
+    // Sample aleatório
+    random_device rd;
+    mt19937 gen(rd());
+    shuffle(all_users.begin(), all_users.end(), gen);
+    
+    int actual_sample = min(sample_size, static_cast<int>(all_users.size()));
+    
+    // Escrever explore.dat
+    ofstream explore_output(explore_file);
+    for (int i = 0; i < actual_sample; ++i) {
+        explore_output << all_users[i];
+        if (i < actual_sample - 1) explore_output << "\n";
+    }
+    explore_output.close();
+    
+    cout << "Arquivo explore.dat criado com " << actual_sample << " usuários" << endl;
+}
+
 float similaridade_jaccard(const std::unordered_map<int, float>& userA, const std::unordered_map<int, float>& userB) {
     std::unordered_map<int, bool> intersecao;
     std::unordered_map<int, bool> uniao;
@@ -85,6 +106,10 @@ float similaridade_euclidiana(const std::unordered_map<int, float>& userA, const
     // Converter distância em similaridade (inverso normalizado)
     return 1.0f / (1.0f + sqrt(soma_quadrados));
 }
+
+
+
+
 
 
 

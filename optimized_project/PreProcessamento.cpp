@@ -29,9 +29,9 @@ void loadInput() {
   {
     vector<std::unordered_map<int, pair<streampos, streampos>>> locais(n_threads);
     for (int i = 0; i < n_threads; i++) {
-      streampos inicio = (tamanho_total * i) / n_threads;
-      streampos fim = (tamanho_total * (i + 1)) / n_threads;
-      threads.emplace_back(UserIntervalos, ref(locais[i]), inicio, fim);
+      streampos inicio_bloco = (tamanho_total * i) / n_threads;
+      streampos fim_bloco = (tamanho_total * (i + 1)) / n_threads;
+      threads.emplace_back(UserIntervalos, ref(locais[i]), inicio_bloco, fim_bloco, i == 0); // Passa um flag para a primeira thread
     }
 
     for (auto &t : threads) {
@@ -272,7 +272,7 @@ void bloco_filtro(Usuarios &mapa,
 
 // Leitura dos Intervalos dos usuários (é necessário?)
 void UserIntervalos(std::unordered_map<int, pair<streampos, streampos>> &intervalo,
-                    streampos inicio, streampos fim) {
+                    streampos inicio, streampos fim, bool is_first_thread) {
   FILE *arquivo = fopen("datasets/ratings.csv", "rb");
   if (!arquivo) {
     cerr << "ratings.csv não encontrado. Abortando.\n";
@@ -285,7 +285,12 @@ void UserIntervalos(std::unordered_map<int, pair<streampos, streampos>> &interva
 
   fseek(arquivo, inicio, SEEK_SET);
   // Ignorar a primeira linha se não for o início do arquivo
-  if (inicio != 0) {
+  if (inicio == 0 && is_first_thread) {
+      char temp_line[256];
+      if (fgets(temp_line, sizeof(temp_line), arquivo) == NULL) {
+          // Handle error or EOF
+      }
+  } else if (inicio != 0) {
       char temp_line[256];
       if (fgets(temp_line, sizeof(temp_line), arquivo) == NULL) {
           // Handle error or EOF
@@ -321,4 +326,6 @@ string formatarNota(float nota) {
   out << fixed << setprecision(1) << nota;
   return out.str();
 }
+
+
 

@@ -10,7 +10,7 @@ void sistema_recomendacao() {
 }
 
 //Cria a matriz de usuários(linhas são usuários e colunas são os filmes)
-pair<matrizUsuarios, pair<vector<int>, std::unordered_map<int, size_t>>> criarMatrizUsuarios(string &arquivo) {
+pair<matrizUsuarios, pair<vector<int>, std::unordered_map<int, size_t>>> criarMatrizUsuarios(const string &arquivo) {
     matrizUsuarios matriz; 
     vector<int> filmesUnicos;
     std::unordered_map<int, size_t> filme_indice;
@@ -171,7 +171,9 @@ LSHIndex construirIndiceLSH(const matrizUsuarios& userMatrix, const vector<int>&
 
     // Merge all local signatures into the main index.user_signatures
     for (auto& local_map : all_local_signatures) {
-        index.user_signatures.merge(local_map);
+        for(auto& pair : local_map) {
+            index.user_signatures.insert(pair);
+        }
     }
 
     // 3. Agrupamento em Baldes em paralelo
@@ -181,17 +183,17 @@ LSHIndex construirIndiceLSH(const matrizUsuarios& userMatrix, const vector<int>&
     // Distribuir assinaturas entre threads
     vector<pair<unordered_map<int, LSHSignature>::const_iterator, unordered_map<int, LSHSignature>::const_iterator>> sig_chunks(num_threads);
     size_t sig_chunk_size = index.user_signatures.size() / num_threads;
-    auto it_sig = index.user_signatures.begin();
+    auto it_sig_start = index.user_signatures.begin();
 
     for (unsigned long i = 0; i < num_threads; ++i) {
-        sig_chunks[i].first = it_sig;
+        sig_chunks[i].first = it_sig_start;
         if (i == num_threads - 1) {
             sig_chunks[i].second = index.user_signatures.end();
         } else {
             for (size_t j = 0; j < sig_chunk_size; ++j) {
-                ++it_sig;
+                ++it_sig_start;
             }
-            sig_chunks[i].second = it_sig;
+            sig_chunks[i].second = it_sig_start;
         }
     }
 
@@ -273,6 +275,10 @@ void gerarRecomendacoesLSH(const matrizUsuarios& userMatrix, const LSHIndex& lsh
     vector<int> explore_users((istream_iterator<int>(explore_input)), 
                             istream_iterator<int>());
 
+    cout << "Total de usuários para explorar: " << explore_users.size() << endl;
+    cout << "Tamanho da userMatrix: " << userMatrix.size() << endl;
+    cout << "Tamanho das user_signatures: " << lsh_index.user_signatures.size() << endl;
+
     // Fila de trabalho e mutex
     queue<int> work_queue;
     mutex queue_mutex;
@@ -311,13 +317,20 @@ void gerarRecomendacoesLSH(const matrizUsuarios& userMatrix, const LSHIndex& lsh
 
             // Verificar se usuário existe na matriz
             auto it_query = userMatrix.find(query_userID);
-            if (it_query == userMatrix.end()) continue;
+            if (it_query == userMatrix.end()) {
+                cout << "Usuário " << query_userID << " não encontrado na userMatrix." << endl;
+                continue;
+            }
 
             const auto& query_ratings = it_query->second;
             const auto& query_movies = user_rated_movies[query_userID];
 
             // 1. Encontrar candidatos via LSH
             auto candidates = encontrarCandidatosLSH(query_userID, lsh_index);
+            if (candidates.empty()) {
+                cout << "Nenhum candidato encontrado para o usuário " << query_userID << endl;
+                continue;
+            }
 
             // 2. Calcular similaridade com heap top-K
             priority_queue<pair<float, int>> topK; // max-heap
@@ -351,6 +364,11 @@ void gerarRecomendacoesLSH(const matrizUsuarios& userMatrix, const LSHIndex& lsh
                 if (topK.size() > static_cast<unsigned long>(config::K)) topK.pop();
             }
 
+            if (topK.empty()) {
+                cout << "Nenhum vizinho similar encontrado para o usuário " << query_userID << endl;
+                continue;
+            }
+
             // 3. Recomendar filmes não avaliados pelo usuário
             unordered_map<int, pair<float, int>> movie_scores;
 
@@ -369,6 +387,11 @@ void gerarRecomendacoesLSH(const matrizUsuarios& userMatrix, const LSHIndex& lsh
                         }
                     }
                 }
+            }
+
+            if (movie_scores.empty()) {
+                cout << "Nenhum filme para recomendar para o usuário " << query_userID << endl;
+                continue;
             }
 
             // 4. Selecionar top-N filmes
@@ -395,6 +418,7 @@ void gerarRecomendacoesLSH(const matrizUsuarios& userMatrix, const LSHIndex& lsh
             // Adicionar resultado com lock
             lock_guard<mutex> lock(results_mutex);
             results.push_back(ss.str());
+            cout << "Recomendação gerada para o usuário " << query_userID << ": " << ss.str() << endl;
         }
     };
 
@@ -408,11 +432,14 @@ void gerarRecomendacoesLSH(const matrizUsuarios& userMatrix, const LSHIndex& lsh
         t.join();
     }
 
+    cout << "Total de resultados gerados: " << results.size() << endl;
+
     // Escrever resultados no arquivo de saída
     ofstream output_stream(output_file);
     for (const auto& line : results) {
         output_stream << line << '\n';
     }
 }
+
 
 
