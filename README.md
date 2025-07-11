@@ -32,14 +32,11 @@
 </td> </tr> </table> </div>
 
 # Introdução
- Um sistema de recomendação é um algoritmo usado para sugerir produtos, filmes, músicas ou outros itens com base nos interesses e comportamentos dos usuários. Ele analisa dados como histórico de compras, avaliações ou interações para prever o que o usuário pode gostar.
+ Um sistema de recomendação é um algoritmo usado para sugerir produtos com base nos interesses e comportamentos dos usuários. Ele analisa dados como histórico de compras, avaliações ou interações para prever o que o usuário pode gostar.
  
  Existem três tipos principais: _filtragem colaborativa_ (baseada em preferências de usuários semelhantes), _filtragem baseada em conteúdo_ (que recomenda itens com características parecidas aos já consumidos) e _sistemas híbridos_, que combinam os dois. Esses sistemas são amplamente utilizados em plataformas como Netflix, Amazon e Spotify para oferecer uma experiência mais personalizada. 
  
- Este trabalho consiste no desenvolvimento de um sistema de recomendação do tipo 'filtragem colaborativa', que, a partir de perfis de usuários e características de itens, seja capaz de sugerir agrupamentos de elementos similares. Utilizando o algoritmo LSH,  <!-- RESUMO -->, e um modelo de tabela hash "Robin Hood", que <!-- RESUMO -->.
-
-  Cálculos como medida de distância euclidiana, similaridade do cosseno ou Jaccard
- devem ser considerados como alternativas. Avaliação conforme critérios de eficiência computacional, qualidade dos resultados, organização do código e documentação, conforme descrito a seguir.
+ Este trabalho consiste no desenvolvimento de um sistema de recomendação do tipo 'filtragem colaborativa', que, a partir de perfis de usuários e características de itens, seja capaz de sugerir agrupamentos de elementos similares. Utilizando o algoritmo LSH,  <!-- RESUMO -->, e um modelo de tabela hash "Robin Hood", que <!-- RESUMO -->. aplicados em *Multithreads* (paralelismo), afim de otimizar o sistema.
  
 ## Compilação e Execução
  *Pré-processamento:* O pré-processamento deverá seguir os seguintes critérios:
@@ -248,7 +245,7 @@ A função `similaridade_cosseno`:
 ### Gerar Recomendações com Base nos Melhores Vizinhos
 
 
-
+# Análise de Performance 
 **negrito**
 *italico*
 
@@ -273,6 +270,10 @@ Este apresenta os seguintes comandos:
 &nbsp;&nbsp;&nbsp;&nbsp;**make c:** make clean + make run
 
 [Script do Makefile utilizado (C++)](Makefile)
+
+## Avaliação Geral
+ Avaliação conforme critérios de eficiência computacional, qualidade dos resultados, organização do código e documentação, conforme descrito a seguir.
+
 
 # Referências
 - [Documento - Trabalho Final](docs/trabalho-final.pdf)
