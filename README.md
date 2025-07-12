@@ -157,29 +157,51 @@ As otimizações implementadas, especialmente o uso extensivo de paralelismo com
 - *F. Maxwell Harper and Joseph A. Konstan. 2015. The MovieLens Datasets: History and Context. ACM Transactions on Interactive Intelligent Systems (TiiS) 5, 4: 19:1–19:19.*
 
 <table style="margin: 0 auto; text-align: center;">
-<tr>
-  <td valign="top" style="text-align: center;">
-    <strong>Alunos</strong><br><br>
-    <img src="https://avatars.githubusercontent.com/u/199279568?v=4" alt="Avatar de João Antonio" style="border-radius:50%; border:4px solid #06D6A0; box-shadow:0 0 10px #06D6A0; width:100px;"><br>
-    <strong>João Antonio</strong><br>
-    <a href="https://github.com/JoaoAnt0nio"><img src="https://img.shields.io/github/followers/JoaoAnt0nio?label=Seguidores&style=social&logo=github" alt="GitHub - João Antonio"></a><br><br>
-    <img src="https://avatars.githubusercontent.com/u/135072001?v=4" alt="Avatar de Arthur Mendonça" style="border-radius:50%; border:4px solid #239A3B; box-shadow:0 0 10px #239A3B; width:100px;"><br>
-    <strong>Arthur Mendonça</strong><br>
-    <a href="https://github.com/ImArthz"><img src="https://img.shields.io/github/followers/ImArthz?label=Seguidores&style=social&logo=github" alt="GitHub - Arthur Mendonça"></a><br><br>
-    <img src="https://avatars.githubusercontent.com/u/83346676?v=4" alt="Avatar de Arthur Santana" style="border-radius:50%; border:4px solid #4ECDC4; box-shadow:0 0 10px #4ECDC4; width:100px;"><br>
-    <strong>Arthur Santana</strong><br>
-    <a href="https://github.com/Rutrama"><img src="https://img.shields.io/github/followers/Rutrama?label=Seguidores&style=social&logo=github" alt="GitHub - Arthur Santana"></a><br><br>
-    <img src="https://avatars.githubusercontent.com/u/121799751?v=4" alt="Avatar de Júlia D'Moura" style="border-radius:50%; border:4px solid #FF6B6B; box-shadow:0 0 10px #FF6B6B; width:100px;"><br>
-    <strong>Júlia D'Moura</strong><br>
-    <a href="https://github.com/msjujubr"><img src="https://img.shields.io/github/followers/msjujubr?label=Seguidores&style=social&logo=github" alt="GitHub - Júlia D'Moura"></a>
-  </td>
-  <td valign="top" style="text-align: center;">
-    <strong>Professor</strong><br><br>
-    <img src="https://avatars.githubusercontent.com/u/46537744?v=4" alt="Avatar de Prof. Michel Pires" style="border-radius:50%; border:4px solid #00599C; box-shadow:0 0 10px #00599C; width:100px;"><br>
-    <strong>Prof. Michel Pires</strong><br>
-    <a href="https://github.com/mpiress"><img src="https://img.shields.io/github/followers/mpiress?label=Seguidores&style=social&logo=github" alt="GitHub - Prof. Michel Pires"></a>
-  </td>
-</tr>
+  <tr>
+    <td colspan="5"><strong>Alunos</strong></td>
+  </tr>
+  <tr>
+    <td>
+      <img src="https://avatars.githubusercontent.com/u/199279568?v=4" alt="Avatar de João Antonio" style="border-radius:50%; border:4px solid #06D6A0; box-shadow:0 0 10px #06D6A0; width:100px;"><br>
+      <strong>João Antonio</strong><br>
+      <a href="https://github.com/JoaoAnt0nio">
+        <img src="https://img.shields.io/github/followers/JoaoAnt0nio?label=Seguidores&style=social&logo=github" alt="GitHub - João Antonio">
+      </a>
+    </td>
+    <td>
+      <img src="https://avatars.githubusercontent.com/u/135072001?v=4" alt="Avatar de Arthur Mendonça" style="border-radius:50%; border:4px solid #239A3B; box-shadow:0 0 10px #239A3B; width:100px;"><br>
+      <strong>Arthur Mendonça</strong><br>
+      <a href="https://github.com/ImArthz">
+        <img src="https://img.shields.io/github/followers/ImArthz?label=Seguidores&style=social&logo=github" alt="GitHub - Arthur Mendonça">
+      </a>
+    </td>
+    <td>
+      <img src="https://avatars.githubusercontent.com/u/83346676?v=4" alt="Avatar de Arthur Santana" style="border-radius:50%; border:4px solid #4ECDC4; box-shadow:0 0 10px #4ECDC4; width:100px;"><br>
+      <strong>Arthur Santana</strong><br>
+      <a href="https://github.com/Rutrama">
+        <img src="https://img.shields.io/github/followers/Rutrama?label=Seguidores&style=social&logo=github" alt="GitHub - Arthur Santana">
+      </a>
+    </td>
+    <td>
+      <img src="https://avatars.githubusercontent.com/u/121799751?v=4" alt="Avatar de Júlia D'Moura" style="border-radius:50%; border:4px solid #FF6B6B; box-shadow:0 0 10px #FF6B6B; width:100px;"><br>
+      <strong>Júlia D'Moura</strong><br>
+      <a href="https://github.com/msjujubr">
+        <img src="https://img.shields.io/github/followers/msjujubr?label=Seguidores&style=social&logo=github" alt="GitHub - Júlia D'Moura">
+      </a>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="5"><strong>Professor</strong></td>
+  </tr>
+  <tr>
+    <td colspan="5" style="text-align: center;">
+      <img src="https://avatars.githubusercontent.com/u/46537744?v=4" alt="Avatar de Prof. Michel Pires" style="border-radius:50%; border:4px solid #00599C; box-shadow:0 0 10px #00599C; width:100px;"><br>
+      <strong>Prof. Michel Pires</strong><br>
+      <a href="https://github.com/mpiress">
+        <img src="https://img.shields.io/github/followers/mpiress?label=Seguidores&style=social&logo=github" alt="GitHub - Prof. Michel Pires">
+      </a>
+    </td>
+  </tr>
 </table>
 
 
