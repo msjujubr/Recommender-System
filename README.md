@@ -66,40 +66,33 @@ flowchart TD
 </details>
 
 ### Processamento dos Dados
-O pré-processamento dos dados é uma etapa crucial para a eficiência do sistema. A função `loadInput()` em `PreProcessamento.cpp` é responsável por carregar e filtrar o dataset `ratings.csv`. Este processo é altamente otimizado e paralelo:
+A primeira etapa do sistema é um pré-processamento robusto e eficiente dos dados brutos, contidos em datasets/ratings.csv. Esta fase é crucial para limpar e preparar os dados para a modelagem, garantindo performance e qualidade.
 
-- **Divisão de Carga com Threads**: O arquivo `ratings.csv` é dividido em blocos, e múltiplas threads (`std::thread`) são utilizadas para processar esses blocos em paralelo. Cada thread é responsável por mapear intervalos de usuários e ler suas avaliações de forma independente, acelerando significativamente a fase de leitura e contagem.
-- **Otimização de I/O**: A leitura de arquivos é aprimorada com o uso de buffers grandes (`setvbuf` com buffer de 1MB) para minimizar as chamadas ao sistema operacional e otimizar o acesso ao disco, resultando em um carregamento de dados mais rápido.
-- **Processamento em Blocos**: As etapas de leitura, contagem de avaliações por usuário e filme, e filtragem são realizadas em blocos paralelos, onde cada thread processa uma parte dos dados de forma independente antes de unificar os resultados. Isso reduz gargalos e melhora a utilização dos recursos do sistema.
+A lógica de processamento está encapsulada principalmente no arquivo `PreProcessamento.cpp`. As principais características são:
 
-Os critérios de filtragem aplicados são:
-- Utilizar apenas usuários que tenham realizado pelo menos `config::minAval` avaliações distintas.
-- Utilizar apenas filmes avaliados por pelo menos `config::minUsers` usuários.
-- Remover registros duplicados ou inconsistentes.
-
-O resultado do pré-processamento é um arquivo `input.dat` no formato `usuario_id item_id1:nota1 item_id2:nota2 ...`.
-
+- Leitura Eficiente com `mmap`: Para evitar o alto custo de I/O de ler um arquivo grande linha por linha, o sistema mapeia o arquivo diretamente na memória usando mmap. Isso permite um acesso muito mais rápido e eficiente aos dados.
+- Processamento Paralelo: O sistema utiliza múltiplas threads (`std::thread`) para processar o arquivo em paralelo. O arquivo é dividido em blocos, e cada thread trabalha em uma seção para identificar os dados de cada usuário.
+- Filtragem de Dados: Para reduzir a esparsidade da matriz e garantir que as recomendações sejam baseadas em dados relevantes, um filtro é aplicado:
+  - Usuários com menos de `config::minAval` avaliações são descartados.
+  - Filmes com menos de `config::minUsers` avaliações são descartados.
+- Saída Estruturada: Após a limpeza, os dados válidos são escritos no arquivo `datasets/input.dat` em um formato otimizado para a próxima fase. Cada linha representa um usuário, seguido por uma lista de `filmeId:nota`.
+  
 ### Criação da Matriz Esparsa
 
-A partir do `input.dat`, é construída uma matriz de usuários esparsa, representada internamente por um `unordered_map<int, unordered_map<int, float>>`. Esta estrutura armazena apenas avaliações existentes, economizando memória para datasets massivos como o MovieLens 25M. Durante a construção, também é criado um mapeamento de `movieId` para um índice contínuo (`filme_indice`), essencial para o alinhamento com os vetores de projeção aleatória do LSH. As avaliações de cada usuário são normalizadas (divididas pela norma L2 de seu vetor de avaliações) para que o produto escalar direto possa ser usado para calcular a Similaridade de Cosseno.
+Após o pré-processamento, o arquivo `input.dat` é usado para construir uma matriz de utilidade (usuário-filme). Como a maioria dos usuários não avaliou a maioria dos filmes, esta matriz é naturalmente esparsa.
+
+A implementação utiliza uma estrutura de dados eficiente para representar essa esparsidade:
+- Representação da Matriz: A matriz é representada como um `std::unordered_map` onde a chave é o `userID` e o valor é outro `std::unordered_map` que mapeia `movieID` para nota. Isso evita alocar espaço para as milhões de entradas vazias da matriz.
+- Normalização de Vetores: Durante a criação da matriz na função `criarMatrizUsuarios`, os vetores de avaliação de cada usuário são normalizados. A função `normalizarMatriz` calcula a norma L2 do vetor de notas de um usuário e divide cada nota por essa norma. Esta normalização é fundamental, pois permite que a Similaridade de Cosseno seja calculada de forma otimizada posteriormente, usando apenas o produto escalar.
 
 ### Implementação do LSH com Projeções Aleatórias
+Para evitar o cálculo de similaridade entre todos os pares de usuários (complexidade de O(n²)), o projeto implementa LSH, uma técnica que agrupa usuários potencialmente similares em "baldes" (buckets) com alta probabilidade. O processo, detalhado em `construirIndiceLSH`, ocorre em três etapas principais:
 
-A implementação do Locality Sensitive Hashing (LSH) com Projeções Aleatórias permite a busca eficiente de vizinhos aproximados em espaços de alta dimensionalidade. A ideia central é mapear vetores de alta dimensão (as avaliações dos usuários) para assinaturas binárias (hashes) menores, de forma que vetores similares tenham hashes similares.
+1 - Geração de Hiperplanos Aleatórios: São gerados `config::numHiperplanos` vetores aleatórios (hiperplanos), onde a dimensionalidade de cada vetor é igual ao número total de filmes únicos.
 
-A estrutura principal que encapsula o índice LSH é `LSHIndex`, definida como:
+2 - Criação de Assinaturas (Signatures): Para cada usuário, é gerada uma assinatura binária. Essa assinatura é obtida calculando o produto escalar entre o vetor de notas (normalizado) do usuário e cada um dos hiperplanos. Se o resultado for positivo, o bit correspondente na assinatura é `1`; caso contrário, é `0`. Isso projeta o vetor de alta dimensão do usuário em um espaço de dimensão muito menor (a assinatura).
 
-- `random_hyperplanes`: Um `vector` de `vector<float>`, onde cada `vector<float>` representa um hiperplano aleatório.
-- `user_signatures`: Um `unordered_map` que armazena a assinatura LSH completa (`LSHSignature`, um `vector<bool>`) para cada `userID`.
-- `lsh_buckets`: Um `vector` de `unordered_map<string, vector<int>>`. Cada elemento no vector representa uma banda, e o `unordered_map` interno mapeia a chave da banda (a string binária da porção da assinatura) para um vector de `userID`s que caem naquele balde.
-- `filme_id_to_index`: Um `unordered_map` crucial que mapeia o `filmeID` real para seu índice na representação densa dos vetores.
-- `unique_movies_ordered`: Um `vector<int>` que mantém os IDs dos filmes únicos em uma ordem consistente.
-
-A construção do índice LSH (`construirIndiceLSH`) envolve:
-
-1.  **Geração de Hiperplanos Aleatórios**: Um conjunto de `config::numHiperplanos` vetores aleatórios é gerado, com componentes amostrados de uma distribuição normal padrão.
-2.  **Criação das Assinaturas de Hash para Cada Usuário (Paralelo)**: Para cada usuário, um produto escalar é calculado entre o vetor de avaliações normalizadas do usuário e cada hiperplano. O sinal do produto escalar determina um bit na assinatura LSH. Este processo é paralelizado para otimizar a performance.
-3.  **Agrupamento em Baldes (Bucketing - Paralelo)**: As assinaturas LSH de cada usuário são divididas em `config::numBandas` bandas. Para cada banda, a porção da assinatura é convertida em uma string binária que serve como chave para um balde. Usuários com a mesma porção de assinatura na mesma banda são agrupados no mesmo balde. Este agrupamento também é paralelizado.
+3 - Hashing em Bandas (Banding): A assinatura de cada usuário é dividida em `config::numBandas` bandas. Cada banda é então usada como uma chave de hash. Usuários que possuem pelo menos uma banda idêntica são colocados no mesmo balde. A colisão em um balde indica que eles são candidatos a serem similares. Todo o processo de criação de assinaturas e agrupamento em baldes é paralelizado para máxima performance.
 
 ### Configuração de Parâmetros LSH
 
@@ -111,30 +104,29 @@ As constantes `numHiperplanos`, `numBandas` e `bitsPorBanda` são cruciais para 
 
 ### Medidas de Similaridade
 
-O sistema oferece suporte a diferentes medidas de similaridade para a análise de perfis de usuários, definidas em `utils.hpp` e `utils.cpp`:
+O sistema utiliza a Similaridade de Cosseno para medir o quão parecidos são dois usuários. A estratégia é dividida em duas fases para otimização:
 
-- **Similaridade de Cosseno**: Utilizada para medir a similaridade de orientação entre dois vetores, independentemente de sua magnitude. É a medida padrão no sistema, aproveitando a normalização prévia das notas dos usuários.
-- **Similaridade de Jaccard**: Mede a similaridade entre dois conjuntos, calculando a razão entre o tamanho da interseção e o tamanho da união dos conjuntos. Útil para comparar a sobreposição de itens avaliados por dois usuários.
-- **Similaridade Euclidiana**: Calcula a distância euclidiana entre os vetores de avaliação de dois usuários. Quanto menor a distância, maior a similaridade.
+1 - Aproximação com LSH: A técnica de LSH com projeções aleatórias serve como uma aproximação da similaridade de cosseno. Ao agrupar usuários em baldes, o LSH identifica rapidamente um conjunto de candidatos a vizinhos próximos, eliminando a necessidade de comparar um usuário com todos os outros. A função `encontrarCandidatosLSH realiza` essa busca.
 
-Para facilitar a seleção e o uso dessas diferentes medidas, foi introduzido um `enum class` chamado `SimilarityType` em `utils.hpp`.
+2 - Cálculo Preciso da Similaridade: Uma vez que um conjunto menor de candidatos é obtido via LSH, a similaridade de cosseno exata é calculada entre o usuário-alvo e cada um dos seus candidatos. Como os vetores de avaliação já foram normalizados na etapa de criação da matriz, o cálculo é otimizado para ser apenas o produto escalar entre os vetores dos dois usuários.
 
 ### Geração de Recomendações
 
-A função `gerarRecomendacoesLSH` é responsável por gerar as recomendações para os usuários especificados no arquivo `explore.dat`. Este processo também é paralelizado para otimizar a performance:
+O processo final de geração de recomendações é feito pela função `gerarRecomendacoesLSH` e segue os passos clássicos de um sistema de filtragem colaborativa baseado em usuário:
 
-1.  **Leitura de Usuários para Exploração**: Os IDs dos usuários para os quais as recomendações serão geradas são lidos do arquivo `explore.dat`.
-2.  **Encontrar Candidatos via LSH**: Para cada usuário, o sistema consulta o índice LSH para encontrar um conjunto de usuários candidatos similares.
-3.  **Cálculo de Similaridade e Seleção Top-K (Paralelo)**: A similaridade entre o usuário alvo e os candidatos é calculada (utilizando a similaridade de cosseno, ou outras se configurado), e os `config::K` usuários mais similares são selecionados. Este passo é executado em paralelo por um pool de threads.
-4.  **Recomendação de Filmes (Paralelo)**: Com base nos `Top-K` vizinhos, o sistema identifica filmes que eles avaliaram positivamente e que o usuário alvo ainda não avaliou. Os filmes são pontuados e os `config::N` melhores são selecionados como recomendações. Este processo também é paralelizado.
-5.  **Escrita de Resultados**: As recomendações geradas são escritas no arquivo `outcome/output.dat`.
+- Leitura dos Usuários-Alvo: O sistema lê os usuários para os quais deve gerar recomendações a partir do arquivo `datasets/explore.dat`.
+- Encontrar Vizinhos Próximos:  
+  1 - Usa o índice LSH para obter uma lista de usuários candidatos (`encontrarCandidatosLSH`).  
+  2 - Calcula a similaridade de cosseno com cada candidato.  
+  3 - Utiliza uma `priority_queue` (heap) para manter de forma eficiente os K vizinhos mais similares.
+- Calcular Scores dos Itens: O sistema agrega as notas dos filmes avaliados pelos `K` vizinhos, dando um peso maior para os filmes avaliados pelos vizinhos mais similares. Apenas filmes que o usuário-alvo ainda não avaliou são considerados.
+- Selecionar Top-N Recomendações: Uma segunda `priority_queue` é usada para ordenar os filmes candidatos pelos seus scores agregados e selecionar os `N` melhores.
+- Escrever Saída: As recomendações finais são escritas no arquivo `outcome/output.dat`, com cada linha contendo o `userID` seguido dos `IDs` dos filmes recomendados.
+Todo este pipeline, da busca de candidatos à geração da lista final, é executado em paralelo por um pool de threads para processar múltiplos usuários simultaneamente.
 
 # Compilação e Execução
 
 O projeto utiliza C++ e pode ser compilado e executado usando um `Makefile`. As dependências e a estrutura do projeto foram atualizadas para incluir:
-
-- **`pch.hpp`**: Um arquivo de cabeçalho pré-compilado (`Precompiled Header`) que inclui cabeçalhos comumente usados. Isso acelera o tempo de compilação, pois esses cabeçalhos são processados apenas uma vez e reutilizados em todas as unidades de compilação.
-- **`utils.hpp` e `utils.cpp`**: Novos arquivos que contêm funções utilitárias, incluindo as implementações das novas medidas de similaridade (Jaccard e Euclidiana) e a função para gerar o arquivo `explore.dat` a partir de um vetor de usuários.
 
 Para compilar e executar o projeto, siga os passos:
 
@@ -147,6 +139,9 @@ Para compilar e executar o projeto, siga os passos:
     -   `make c`: Uma combinação de `make clean` e `make run`, útil para recompilar e executar o projeto do zero.
 
 O programa gerará o arquivo `input.dat` no diretório `datasets/` após o pré-processamento e o arquivo `output.dat` no diretório `outcome/` com as recomendações geradas.
+
+# Máquinas de Testes
+
 
 # Análise de Performance
 
