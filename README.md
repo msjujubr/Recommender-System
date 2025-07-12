@@ -22,7 +22,7 @@
 - [Agradecimentos](#agradecimentos)
 
 </td> <td>
- <img src="imgs/fluxograma.png" width="400">
+ <img src="imgs/recomendacao.png" width="400">
 </td> </tr> </table> </div>
 
 # Introdução
