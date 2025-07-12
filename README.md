@@ -65,17 +65,15 @@ flowchart TD
 </details>
 
 ### Processamento dos Dados
-O pré-processamento dos dados é uma etapa crucial para a eficiência do sistema. A função `loadInput()` em `PreProcessamento.cpp` é responsável por carregar e filtrar o dataset `ratings.csv`. Este processo é altamente otimizado e paralelo:
+A primeira etapa do sistema é o pré-processamento dos dados brutos, contidos em `datasets/ratings.csv`. Esta fase é crucial para limpar e preparar os dados para a modelagem, garantindo performance e qualidade.
 
-- **Divisão de Carga com Threads**: O arquivo `ratings.csv` é dividido em blocos, e múltiplas threads (`std::thread`) são utilizadas para processar esses blocos em paralelo. Cada thread é responsável por mapear intervalos de usuários e ler suas avaliações de forma independente, acelerando significativamente a fase de leitura e contagem.
-- **Processamento em Blocos**: As etapas de leitura, contagem de avaliações por usuário e filme, e filtragem são realizadas em blocos paralelos, onde cada thread processa uma parte dos dados de forma independente antes de unificar os resultados. Isso reduz gargalos e melhora a utilização dos recursos do sistema.
-
-Os critérios de filtragem aplicados são:
-- Utilizar apenas usuários que tenham realizado pelo menos `config::minAval` avaliações distintas.
-- Utilizar apenas filmes avaliados por pelo menos `config::minUsers` usuários.
-- Remover registros duplicados ou inconsistentes.
-
-O resultado do pré-processamento é um arquivo `input.dat` no formato `usuario_id item_id1:nota1 item_id2:nota2 ...`.
+A lógica de processamento está encapsulada principalmente no arquivo `PreProcessamento.cpp`. As principais características são:
+- Leitura Eficiente com mmap: Para evitar o alto custo de I/O de ler um arquivo grande linha por linha, o sistema mapeia o arquivo diretamente na memória usando `mmap`. Isso permite um acesso muito mais rápido e eficiente aos dados.
+- Processamento Paralelo: O sistema utiliza múltiplas threads (`std::thread`) para processar o arquivo em paralelo. O arquivo é dividido em blocos, e cada thread trabalha em uma seção para identificar os dados de cada usuário.
+- Filtragem de Dados: Para reduzir a esparsidade da matriz e garantir que as recomendações sejam baseadas em dados relevantes, um filtro é aplicado:
+  - Usuários com menos de `config::minAval` avaliações são descartados.
+  - Filmes com menos de `config::minUsers` avaliações são descartados.
+- Saída Estruturada: Após a limpeza, os dados válidos são escritos no arquivo `datasets/input.dat` em um formato otimizado para a próxima fase. Cada linha representa um usuário, seguido por uma lista de filmeId:nota.
 
 ### Criação da Matriz Esparsa
 
