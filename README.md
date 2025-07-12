@@ -1,4 +1,3 @@
-# Sistema de Recomendação 
 ![C++](https://img.shields.io/badge/Linguagem-C++-green.svg)
 ![Make](https://img.shields.io/badge/Compilacao-Make-orange)
 ![VSCode](https://img.shields.io/badge/IDE-VSCode-informational)
@@ -10,14 +9,14 @@
 - [Introdução](#introducao)
 - [Metodologia](#metodologia)
   - [Processamento dos Dados](#processamento-dos-dados)
-  - [Sistema de Recomendação](#sistema-de-recomendacao)
-- [Compilação e Execução](#compilação-e-execucao)
-  - [Dataset](#dataset)
-  - [MakeFile](#makefile)
+  - [Criação da Matriz Esparsa](#criacao-da-matriz-esparsa)
+  - [Implementação do LSH com Projeções Aleatórias](#implementacao-do-lsh-com-projecoes-aleatorias)
+  - [Configuração de Parâmetros LSH](#configuracao-de-parametros-lsh)
+  - [Medidas de Similaridade](#medidas-de-similaridade)
+  - [Geração de Recomendações](#geracao-de-recomendacoes)
+- [Compilação e Execução](#compilacao-e-execucao)
 - [Análise de Performance](#analise-de-performance)
-  - [Comportamento](#comportamento)
-  - [Avaliação Geral](#avaliacao-geral)
-- [Referências](#referências)
+- [Referências](#referencias)
 - [Autores](#autores)
 - [Agradecimentos](#agradecimentos)
 
@@ -26,12 +25,12 @@
 </td> </tr> </table> </div>
 
 # Introdução
- Um sistema de recomendação é um algoritmo usado para sugerir produtos com base nos interesses e comportamentos dos usuários. Ele analisa dados como histórico de compras, avaliações ou interações para prever o que o usuário pode gostar.
- 
- Existem três tipos principais: _filtragem colaborativa_ (baseada em preferências de usuários semelhantes), _filtragem baseada em conteúdo_ (que recomenda itens com características parecidas aos já consumidos) e _sistemas híbridos_, que combinam os dois. Esses sistemas são amplamente utilizados em plataformas como Netflix, Amazon e Spotify para oferecer uma experiência mais personalizada. 
- 
- Este trabalho consiste no desenvolvimento de um sistema de recomendação do tipo 'filtragem colaborativa', que, a partir de perfis de usuários e características de itens, seja capaz de sugerir agrupamentos de elementos similares. Utilizando o algoritmo LSH,  <!-- RESUMO -->, e um modelo de tabela hash "Robin Hood", que <!-- RESUMO -->. aplicados em *Multithreads* (paralelismo), afim de otimizar o sistema.
- 
+Um sistema de recomendação é um algoritmo usado para sugerir produtos com base nos interesses e comportamentos dos usuários. Ele analisa dados como histórico de compras, avaliações ou interações para prever o que o usuário pode gostar.
+
+Existem três tipos principais: _filtragem colaborativa_ (baseada em preferências de usuários semelhantes), _filtragem baseada em conteúdo_ (que recomenda itens com características parecidas aos já consumidos) e _sistemas híbridos_, que combinam os dois. Esses sistemas são amplamente utilizados em plataformas como Netflix, Amazon e Spotify para oferecer uma experiência mais personalizada.
+
+Este trabalho consiste no desenvolvimento de um sistema de recomendação do tipo 'filtragem colaborativa', que, a partir de perfis de usuários e características de itens, seja capaz de sugerir agrupamentos de elementos similares. O sistema utiliza o algoritmo Locality Sensitive Hashing (LSH) com Projeções Aleatórias para otimizar a busca por vizinhos similares em grandes datasets. Para garantir alta performance e escalabilidade, o sistema emprega *Multithreads* (paralelismo) em diversas etapas críticas, como o pré-processamento de dados e a construção do índice LSH, além de otimizações de I/O para leitura eficiente de arquivos.
+
 # Metodologia
 
 ***Organização do Trabalho***: A lógica de desenvolvimento do sistema de recomendação segue a ordem de implementação do fluxograma abaixo:
@@ -40,280 +39,169 @@
 
 ```mermaid
 flowchart TD
-    A[Início do Programa] --> B{Carregar e Pré-processar Dados}
+    A[Inicio do Programa] --> B{Carregar e PreProcessar Dados}
     B --> C[Ler ratings.csv]
-    C --> D{Aplicar Filtros:}
-    D --> D1[minUsuario = 50 avaliações]
-    D --> D2[minFilme = 50 avaliações]
+    C --> D{Aplicar Filtros}
+    D --> D1[minUsuario = 50 avaliacoes]
+    D --> D2[minFilme = 50 avaliacoes]
     D1 --> E[Gerar datasets/input.dat]
     D2 --> E
-    E --> F[Gerar Matriz Esparsa de Usuários]
+    E --> F[Gerar Matriz Esparsa de Usuarios]
     F --> F1[Normalizar Matriz para Similaridade de Cosseno]
-    F1 --> G{Configurar LSH com Projeções Aleatórias}
+    F1 --> G{Configurar LSH com Projecoes Aleatorias}
     G --> G1[Definir num_projections e num_bands]
-    G1 --> H[Indexar Matriz de Usuários no LSH]
-    H --> I[Ler Usuários para Exploração - explore.dat]
-    I --> J{Para cada Usuário a Recomendar:}
+    G1 --> H[Indexar Matriz de Usuarios no LSH]
+    H --> I[Ler Usuarios para Exploracao explore.dat]
+    I --> J{Para cada Usuario a Recomendar}
     J --> J1[Consultar Vizinhos Candidatos via LSH]
     J1 --> J2[Calcular Similaridade de Cosseno]
-    J2 --> J3[Selecionar Top-K Usuários Mais Similares]
-    J3 --> J4[Gerar Recomendações Top-N com base nos Top-K Vizinhos]
-    J4 --> K[Escrever Recomendações em outputs.dat]
+    J2 --> J3[Selecionar Top-K Usuarios Mais Similares]
+    J3 --> J4[Gerar Recom Top-N com base nos Top-K Vizinhos]
+    J4 --> K[Escrever Recomendacoes em outputs.dat]
     K --> L[Fim do Programa]
 
- ```
+```
+
 </details>
 
 ### Processamento dos Dados
+O pré-processamento dos dados é uma etapa crucial para a eficiência do sistema. A função `loadInput()` em `PreProcessamento.cpp` é responsável por carregar e filtrar o dataset `ratings.csv`. Este processo é altamente otimizado e paralelo:
+
+- **Divisão de Carga com Threads**: O arquivo `ratings.csv` é dividido em blocos, e múltiplas threads (`std::thread`) são utilizadas para processar esses blocos em paralelo. Cada thread é responsável por mapear intervalos de usuários e ler suas avaliações de forma independente, acelerando significativamente a fase de leitura e contagem.
+- **Processamento em Blocos**: As etapas de leitura, contagem de avaliações por usuário e filme, e filtragem são realizadas em blocos paralelos, onde cada thread processa uma parte dos dados de forma independente antes de unificar os resultados. Isso reduz gargalos e melhora a utilização dos recursos do sistema.
+
+Os critérios de filtragem aplicados são:
+- Utilizar apenas usuários que tenham realizado pelo menos `config::minAval` avaliações distintas.
+- Utilizar apenas filmes avaliados por pelo menos `config::minUsers` usuários.
+- Remover registros duplicados ou inconsistentes.
+
+O resultado do pré-processamento é um arquivo `input.dat` no formato `usuario_id item_id1:nota1 item_id2:nota2 ...`.
 
 ### Criação da Matriz Esparsa
 
-A partir de input.dat, é construída uma matriz de usuários esparsa. Essa matriz é representada internamente por um `unordered_map<int, unordered_map<int, float>>`, onde:
+A partir do `input.dat`, é construída uma matriz de usuários esparsa, representada internamente por um `unordered_map<int, unordered_map<int, float>>`. Esta estrutura armazena apenas avaliações existentes, economizando memória para datasets massivos como o MovieLens 25M. Durante a construção, também é criado um mapeamento de `movieId` para um índice contínuo (`filme_indice`), essencial para o alinhamento com os vetores de projeção aleatória do LSH. As avaliações de cada usuário são normalizadas (divididas pela norma L2 de seu vetor de avaliações) para que o produto escalar direto possa ser usado para calcular a Similaridade de Cosseno.
 
-- A primeira chave (int) é o userId.
+### Implementação do LSH com Projeções Aleatórias
 
-- O unordered_map interno mapeia movieId `int` para a nota `float`.
-
-A matriz implementada é esparsa e armazena apenas avaliações existentes (não-nulas), economizando memória significativa para um dataset massivo como o MovieLens 25M.
-
-Durante a construção, também é criado um mapeamento de movieId para um índice contínuo `filme_indice`, essencial para o alinhamento com os vetores de projeção aleatória do LSH.
-
-As avaliações de cada usuário são normalizadas (divididas pela norma L2 de seu vetor de avaliações) para que o produto escalar direto possa ser usado para calcular a Similaridade de Cosseno (esta parte é feita pela função `normalizarMatriz`) .
-
-Por fim, a matriz esparsa de usuários fica no seguinte formato:
-
-| Usuário ID | Filme 101 | Filme 205 | Filme 330 | Filme 402 | ... |
-|------------|-----------|-----------|-----------|-----------|-----|
-| 1001       | 0.25      | 0.43      | ---       | 0.77      | ... |
-| 1002       | ---       | 0.58      | 0.64      | ---       | ... |
-| 1003       | 0.36      | ---       | 0.49      | 0.61      | ... |
-| ...        | ...       | ...       | ...       | ...       | ... |
-
-- `---` indica ausência de avaliação (zero implícito na matriz esparsa).
-- Os valores são **notas já normalizadas** (norma L2 = 1 por linha).
-
-### Implementar LSH com Random Projections
-
-A implementação do Locality Sensitive Hashing (LSH) com Projeções Aleatórias no código segue um fluxo bem definido para permitir a busca eficiente de vizinhos aproximados em espaços de alta dimensionalidade. A ideia central é mapear vetores de alta dimensão (as avaliações dos usuários) para assinaturas binárias (hashes) menores, de forma que vetores similares tenham hashes similares.
+A implementação do Locality Sensitive Hashing (LSH) com Projeções Aleatórias permite a busca eficiente de vizinhos aproximados em espaços de alta dimensionalidade. A ideia central é mapear vetores de alta dimensão (as avaliações dos usuários) para assinaturas binárias (hashes) menores, de forma que vetores similares tenham hashes similares.
 
 A estrutura principal que encapsula o índice LSH é `LSHIndex`, definida como:
 
-- `random_hyperplanes`: Um `vector` de `vector<float>`, onde cada `vector<float>` representa um hiperplano aleatório. O tamanho interno de cada hiperplano é igual ao número total de filmes únicos (`uniqueMovies.size()`).
-
+- `random_hyperplanes`: Um `vector` de `vector<float>`, onde cada `vector<float>` representa um hiperplano aleatório.
 - `user_signatures`: Um `unordered_map` que armazena a assinatura LSH completa (`LSHSignature`, um `vector<bool>`) para cada `userID`.
+- `lsh_buckets`: Um `vector` de `unordered_map<string, vector<int>>`. Cada elemento no vector representa uma banda, e o `unordered_map` interno mapeia a chave da banda (a string binária da porção da assinatura) para um vector de `userID`s que caem naquele balde.
+- `filme_id_to_index`: Um `unordered_map` crucial que mapeia o `filmeID` real para seu índice na representação densa dos vetores.
+- `unique_movies_ordered`: Um `vector<int>` que mantém os IDs dos filmes únicos em uma ordem consistente.
 
-- `lsh_buckets`: Um vector de `unordered_map<string, vector<int>>`. Cada elemento no vector representa uma banda (`L`). O `unordered_map` interno mapeia a chave da banda (a string binária da porção da assinatura) para um vector de `userID`s que caem naquele balde para aquela banda específica.
+A construção do índice LSH (`construirIndiceLSH`) envolve:
 
-- `filme_id_to_index`: Um u`nordered_map` crucial que mapeia o `filmeID` real para seu índice na representação densa dos vetores (necessário para alinhar as avaliações dos usuários com as dimensões dos hiperplanos).
+1.  **Geração de Hiperplanos Aleatórios**: Um conjunto de `config::numHiperplanos` vetores aleatórios é gerado, com componentes amostrados de uma distribuição normal padrão.
+2.  **Criação das Assinaturas de Hash para Cada Usuário (Paralelo)**: Para cada usuário, um produto escalar é calculado entre o vetor de avaliações normalizadas do usuário e cada hiperplano. O sinal do produto escalar determina um bit na assinatura LSH. Este processo é paralelizado para otimizar a performance.
+3.  **Agrupamento em Baldes (Bucketing - Paralelo)**: As assinaturas LSH de cada usuário são divididas em `config::numBandas` bandas. Para cada banda, a porção da assinatura é convertida em uma string binária que serve como chave para um balde. Usuários com a mesma porção de assinatura na mesma banda são agrupados no mesmo balde. Este agrupamento também é paralelizado.
 
-- `unique_movies_ordered`: Um `vector<int>` que mantém os IDs dos filmes únicos em uma ordem consistente, usada para definir as dimensões dos hiperplanos.
+### Configuração de Parâmetros LSH
 
-  A construção do índice LSH envolve os seguintes passos, realizados pela função construirIndiceLSH:
+As constantes `numHiperplanos`, `numBandas` e `bitsPorBanda` são cruciais para o ajuste fino do algoritmo LSH, balanceando a precisão e a eficiência. Elas são definidas no arquivo `config.hpp`:
 
-#### Geração de Hiperplanos Aleatórios:
+- **`numHiperplanos`**: Define o número total de projeções aleatórias usadas para gerar a assinatura LSH de cada usuário. Um valor maior aumenta a granularidade da assinatura, potencialmente melhorando a precisão na identificação de usuários similares, mas também eleva o custo computacional da construção e consulta do índice. No código atual, `numHiperplanos` está configurado para `16`.
+- **`numBandas`**: Determina em quantas sub-assinaturas (bandas) a assinatura LSH completa é dividida. O bucketing é realizado por banda. Um número maior de bandas pode aumentar o *recall* (a capacidade de encontrar todos os vizinhos verdadeiros), mas também pode gerar mais candidatos falsos positivos se as bandas forem muito pequenas. Atualmente, `numBandas` é `16`.
+- **`bitsPorBanda`**: Indica quantos bits de cada assinatura LSH compõem uma única banda. A relação fundamental entre esses parâmetros é `numHiperplanos = numBandas * bitsPorBanda`. No código, `bitsPorBanda` é `8`.
 
-- Um conjunto de `config::numHiperplanos` vetores aleatórios é gerado. Cada vetor tem `uniqueMovies.size()` dimensões, com seus componentes amostrados de uma distribuição normal padrão (média 0, desvio padrão 1). Estes vetores são armazenados em `random_hyperplanes`.
+### Medida de Similaridade
 
-#### Criação das Assinaturas de Hash para Cada Usuário:
+O sistema utiliza a Similaridade de Cosseno para medir o quão parecidos são dois usuários. A estratégia é dividida em duas fases para otimização:
+- Aproximação com LSH: A técnica de LSH com projeções aleatórias serve como uma aproximação da similaridade de cosseno. Ao agrupar usuários em baldes, o LSH identifica rapidamente um conjunto de candidatos a vizinhos próximos, eliminando a necessidade de comparar um usuário com todos os outros. A função encontrarCandidatosLSH realiza essa busca.
+- Cálculo Preciso da Similaridade: Uma vez que um conjunto menor de candidatos é obtido via LSH, a similaridade de cosseno exata é calculada entre o usuário-alvo e cada um dos seus candidatos. Como os vetores de avaliação já foram normalizados na etapa de criação da matriz, o cálculo é otimizado para ser apenas o produto escalar entre os vetores dos dois usuários.
 
-- Para cada usuário na `userMatrix`:
-  - Um produto escalar é calculado entre o vetor de avaliações normalizadas do usuário e cada um dos `random_hyperplanes`.
-  - O sinal do produto escalar (>= 0 ou < 0) determina um bit (true ou false) na assinatura LSH do usuário.
-  - Esses bits são concatenados para formar a `LSHSignature` completa do usuário, que é então armazenada em `user_signatures`.
+### Geração de Recomendações
 
-#### Agrupamento em Baldes (Bucketing):
+A função `gerarRecomendacoesLSH` é responsável por gerar as recomendações para os usuários especificados no arquivo `explore.dat`. Este processo também é paralelizado para otimizar a performance:
 
-- As assinaturas LSH de cada usuário são divididas em `config::numBandas` bandas.
-- Para cada banda:
-  - A porção da assinatura correspondente à banda é extraída.
-  - Essa porção é convertida em uma string binária (e.g., "0101").
-  - Esta string serve como chave para um balde dentro da `lsh_buckets` para a banda atual. Todos os `userID`s que possuem a mesma porção de assinatura nessa banda são colocados no mesmo balde.
-
- Este processo resulta em um índice LSH que pode ser eficientemente consultado para encontrar usuários candidatos similares, que serão então refinados por um cálculo de similaridade de cosseno completo.
-  
-
-### Definir numHiperplanos e numBandas
-
-As constantes `numHiperplanos` (número total de projeções/bits na assinatura) e `numBandas` (número de bandas para o bucketing LSH) são parâmetros cruciais na configuração do algoritmo LSH. Elas são definidas no arquivo `config.hpp` e diretamente controlam o "trade-off" entre a precisão (capacidade de encontrar vizinhos verdadeiros) e a eficiência (velocidade da busca) do sistema LSH.
-
-- `numHiperplanos`:
-  - Finalidade: Define o número de hiperplanos aleatórios que serão gerados. Cada hiperplano contribui com um bit (0 ou 1) para a assinatura LSH completa de um usuário.
-  - Impacto: Um número maior de numHiperplanos resulta em assinaturas LSH mais longas, o que geralmente aumenta a precisão (a capacidade de distinguir usuários diferentes) mas também pode aumentar o tempo de construção e consulta do índice. No código, está definido como 24.
-
-- `numBandas`:
-  - Finalidade: Determina em quantas partes (`L`) a assinatura LSH completa será dividida. Para cada banda, uma sub-assinatura é formada e usada para o bucketing (agrupamento de usuários).
-  - Impacto: Um número maior de `numBandas` significa que a assinatura é dividida em mais partes menores. Isso aumenta a probabilidade de que usuários similares caiam no mesmo balde em pelo menos uma banda, o que pode melhorar o "recall" (a capacidade de encontrar todos os vizinhos verdadeiros). No código, está definido como 6.
- 
- - `bitsPorBanda`:
-   - Finalidade: Define quantos bits de cada assinatura LSH farão parte de uma única banda.
-   - Relação: Esta constante está intrinsecamente ligada a numHiperplanos e `numBandas`. A relação fundamental no LSH com Projeções Aleatórias é que o número total de bits (`numHiperplanos`) deve ser igual ao produto do número de bandas pelo número de bits por banda: `numHiperplanos` = `numBandas` * `bitsPorBanda`
-
-### Ler Usuário Para Recomendação (explore.dat)
-
-A leitura de usuários para recomendação é feita com base em um arquivo `explore.dat`, estes usuários receberão as recomendações. Esta leitura é feita pela função `explorador`.
-
-- A função começa abrindo o arquivo explore.dat, que está localizado dentro da pasta datasets/.
-
-- Um loop while (arquivo >> userId) lê os IDs dos usuários. Este método de leitura é eficiente para arquivos onde cada ID está em uma linha separada ou são separados por espaços. Ele continua lendo enquanto houver inteiros válidos no arquivo.
-
-- Cada userId lido é imediatamente adicionado a `vector<int> usuarios`, que acumula todos os identificadores.
-
-- Após ler todos os IDs, o arquivo é fechado para liberar os recursos.
-
-- Por fim a função retorna o vetor usuarios, que agora contém a lista completa de IDs de usuários para os quais o sistema deve processar as recomendações.
-
-### Definir Vizinhos Candidatos com o LSH
-
-
-
-### Calcular Similaridade de Cosseno entre Usuários e Vizinhos
-
-A função `similaridade_cosseno` é implementada para tirar proveito da normalização prévida das notas dos usuários. Ela recebe dois `unordered_map`s que representam os vetores de avaliação esparsos dos usuários (já normalizados).
-
-A função `similaridade_cosseno`:
-
-- Percorre os filmes avaliados por um usuário (userA).
-
-- Para cada filme avaliado por userA, verifica se o outro usuário (userB) também avaliou o mesmo filme (userB.count(filmeID)).
-
-- Se sim, o produto das notas (já normalizadas) desses filmes é somado (notaA * userB.at(filmeID)).
-
-- O resultado final é o produto escalar, que, devido à normalização prévia, é diretamente a similaridade de cosseno.
-
-### Gerar Recomendações com Base nos Melhores Vizinhos
-
+1.  **Leitura de Usuários para Exploração**: Os IDs dos usuários para os quais as recomendações serão geradas são lidos do arquivo `explore.dat`.
+2.  **Encontrar Candidatos via LSH**: Para cada usuário, o sistema consulta o índice LSH para encontrar um conjunto de usuários candidatos similares.
+3.  **Cálculo de Similaridade e Seleção Top-K (Paralelo)**: A similaridade entre o usuário alvo e os candidatos é calculada (utilizando a similaridade de cosseno, ou outras se configurado), e os `config::K` usuários mais similares são selecionados. Este passo é executado em paralelo por um pool de threads.
+4.  **Recomendação de Filmes (Paralelo)**: Com base nos `Top-K` vizinhos, o sistema identifica filmes que eles avaliaram positivamente e que o usuário alvo ainda não avaliou. Os filmes são pontuados e os `config::N` melhores são selecionados como recomendações. Este processo também é paralelizado.
+5.  **Escrita de Resultados**: As recomendações geradas são escritas no arquivo `outcome/output.dat`.
 
 # Compilação e Execução
-## Dataset
- *Pré-processamento:* O pré-processamento deverá seguir os seguintes critérios:
- 
-    • Utilizar apenas usuários que tenham realizado pelo menos 50 avaliações distintas.
-    • Utilizar apenas filmes avaliados por pelo menos 50 usuários.
-    • Remover registros duplicados ou inconsistentes.
-    • Gerar arquivo de entrada no seguinte formato: _usuario_id item_id1:nota1 item_id2:nota2 item_id3:nota3 ..._
- Exemplo: 123 12:4.0 54:3.5 76:5.0 145:2.0
- Note que, cada linha representa um usuário (usuario_id) e suas respectivas avaliações (item_id:nota)
- 
- Para o arquivo que será utilizado como fonte de informação para a execução das recomendações, tem-se como padrões a serem seguidos:
- Trabalho Final
- Page 1
-• Nomedoarquivo: input.dat
- • Localização: Diretório datasets/
- • Formato: Texto puro (UTF-8)
- • Necessidade: Arquivo que representará a base de dados para exploração
 
- Já para os arquivos de exploração e de saída, espera-se que ambos sigam os seguintes
- padrões:
- • Nome do arquivo: explore.dat
- • Localização: Diretório datasets/
- • Formato: Texto puro (UTF-8)
- • Necessidade: Arquivo que conterá os usuários utilizados para exploração das recomen
-dações
- • Nome do arquivo: output.dat
- • Localização: Diretório outcome/
- • Formato: Texto puro (UTF-8)
- • Necessidade: Arquivo contendo as K recomendações para cada usuário apresentados
- no arquivo explore.dat
+Para compilar e executar o projeto, siga os passos:
 
- Para cada usuario_id listado, o procedimento a ser seguido consiste em:
- • Realizar a busca na base de dados para identificar os filmes previamente avaliados por
- este usuário.
- • A partir desse conjunto de avaliações, calcular a similaridade ou afinidade do usuário em
- relação aos demais usuários da base, utilizando a métrica de distância ou similaridade
- definida pelo projeto.
- Trabalho Final
- Page 2
-• Selecionar os K usuários mais similares (de maior afinidade) ao usuário em análise.
- • Identificar os filmes avaliados positivamente pelos usuários similares, mas ainda não
- avaliados pelo usuário-alvo, priorizando aqueles com maior grau de sobreposição de interesse.
- • A partir dessa análise, gerar as recomendações a serem atribuídas a cada usuario_id.
- Os resultados deste processo deverão ser armazenados no arquivo output.dat, obedecendo
- o formato estipulado, em que cada linha corresponde a um usuario_id seguido pelos item_ids
- recomendados
+1.  **Pré-requisitos**: Certifique-se de ter um compilador C++ (como g++) e `make` instalados em seu sistema.
+2.  **Navegar até o diretório do projeto**: Abra um terminal e navegue até o diretório raiz do projeto.
+3.  **Comandos do Makefile**:
+    -   `make`: Compila o projeto, criando os executáveis necessários.
+    -   `make clean`: Remove os arquivos de compilação gerados (objetos e executáveis).
+    -   `make run`: Compila o projeto (se necessário) e executa o programa principal.
+    -   `make c`: Uma combinação de `make clean` e `make run`, útil para recompilar e executar o projeto do zero.
 
- O arquivo output.dat deverá conter o formato abaixo, sendo o número de recomendações
- (Top-N) será definido via constante global no arquivo config.h.
- usuario_id item_id1 item_id2 item_id3 ...
- Exemplo: 123 54 76 145
+O programa gerará o arquivo `input.dat` no diretório `datasets/` após o pré-processamento e o arquivo `output.dat` no diretório `outcome/` com as recomendações geradas.
 
-## Makefile
-O programa é executado por um Makefile, arquivo de texto que automatiza o processo de compilação, que interage com todos os arquivos dentro da pasta "src". 
-Este apresenta os seguintes comandos:
+# Máquinas de Testes
 
-&nbsp;&nbsp;&nbsp;&nbsp;**make:** Compila o projeto
-
-&nbsp;&nbsp;&nbsp;&nbsp;**make clean:** Remove os arquivos
-
-&nbsp;&nbsp;&nbsp;&nbsp;**make run:** Compila o projeto (se necessário) e depois executa o programa.
-
-&nbsp;&nbsp;&nbsp;&nbsp;**make c:** make clean + make run
-
-[Script do Makefile utilizado (C++)](Makefile)
+| Máquina | Processador            | Memória RAM | Sistema Operacional |
+|------------------|------------------------|-------------|---------------------|
+| ? | ?    | ?       | ?     |
+| Lenovo ideaPad Gaming 3i    | Intel Core i5-11300H      | 8 GB        | Ubuntu 22.04       |
 
 
+# Análise de Performance
 
-
-# Análise de Performance 
-**negrito**
-*italico*
-
-| Função            | Descrição                                                  |
-|-------------------|------------------------------------------------------------|
-| [`nomw`](link)  | resumo da função  |
-
-## Comportamento
-Assim como no [Jogo da Vida][1] (J. Conway, 1970), a propagação do fogo na matriz é baseada em *Autômatos Celulares*, um modelo computacional introduzido por John von Neumann e amplamente explorado por Stephen Wolfram em sua obra: [A New Kind of Science (2002)][2]. Autômatos celulares consistem em células organizadas em uma grade, onde cada célula possui um estado (como “árvore”, “fogo” ou “zona segura” dentro da matriz "floresta") e evolui ao longo do tempo de acordo com regras locais e discretas. Essa abordagem é ideal para simular fenômenos naturais como incêndios florestais, ou condições de vida como no jogo do Conway, em que cada célula depende do estado de suas vizinhas.
-
-## Avaliação Geral
- Avaliação conforme critérios de eficiência computacional, qualidade dos resultados, organização do código e documentação, conforme descrito a seguir.
-
+As otimizações implementadas, especialmente o uso extensivo de paralelismo com `std::thread` no pré-processamento e na construção do índice LSH, resultaram em ganhos significativos de performance. A divisão de tarefas entre múltiplas threads e a otimização da leitura de arquivos com buffers maiores contribuem para uma execução mais rápida, especialmente com grandes volumes de dados. Isso permite que o sistema processe datasets maiores em um tempo reduzido, tornando-o mais escalável e eficiente para aplicações do mundo real.
 
 # Referências
 - [Documento - Trabalho Final](docs/trabalho-final.pdf)
-- [1]: https://doi.org/10.1145/2827872
-- *F. Maxwell Harper and Joseph A. Konstan. 2015. The MovieLens Datasets: History and Context. ACM Transactions on Interactive Intelligent Systems (TiiS) 5, 4: 19:1–19:19.*
+- *F. Maxwell Harper and Joseph A. Konstan. 2015. The MovieLens Datasets: History and Context. ACM Transactions on Interactive Intelligent Systems (TiiS) 5, 4: 19:1–19:19.*  
 
-# Autores
+    
+<table style="margin: 0 auto; text-align: center;">
+  <tr>
+    <td colspan="5"><strong>Alunos</strong></td>
+  </tr>
+  <tr>
+    <td>
+      <img src="https://avatars.githubusercontent.com/u/199279568?v=4" alt="Avatar de João Antonio" style="border-radius:50%; border:4px solid #06D6A0; box-shadow:0 0 10px #06D6A0; width:100px;"><br>
+      <strong>João Antonio</strong><br>
+      <a href="https://github.com/JoaoAnt0nio">
+        <img src="https://img.shields.io/github/followers/JoaoAnt0nio?label=Seguidores&style=social&logo=github" alt="GitHub - João Antonio">
+      </a>
+    </td>
+    <td>
+      <img src="https://avatars.githubusercontent.com/u/135072001?v=4" alt="Avatar de Arthur Mendonça" style="border-radius:50%; border:4px solid #239A3B; box-shadow:0 0 10px #239A3B; width:100px;"><br>
+      <strong>Arthur Mendonça</strong><br>
+      <a href="https://github.com/ImArthz">
+        <img src="https://img.shields.io/github/followers/ImArthz?label=Seguidores&style=social&logo=github" alt="GitHub - Arthur Mendonça">
+      </a>
+    </td>
+    <td>
+      <img src="https://avatars.githubusercontent.com/u/83346676?v=4" alt="Avatar de Arthur Santana" style="border-radius:50%; border:4px solid #4ECDC4; box-shadow:0 0 10px #4ECDC4; width:100px;"><br>
+      <strong>Arthur Santana</strong><br>
+      <a href="https://github.com/Rutrama">
+        <img src="https://img.shields.io/github/followers/Rutrama?label=Seguidores&style=social&logo=github" alt="GitHub - Arthur Santana">
+      </a>
+    </td>
+    <td>
+      <img src="https://avatars.githubusercontent.com/u/121799751?v=4" alt="Avatar de Júlia D'Moura" style="border-radius:50%; border:4px solid #FF6B6B; box-shadow:0 0 10px #FF6B6B; width:100px;"><br>
+      <strong>Júlia D'Moura</strong><br>
+      <a href="https://github.com/msjujubr">
+        <img src="https://img.shields.io/github/followers/msjujubr?label=Seguidores&style=social&logo=github" alt="GitHub - Júlia D'Moura">
+      </a>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="5"><strong>Professor</strong></td>
+  </tr>
+  <tr>
+    <td colspan="5" style="text-align: center;">
+      <img src="https://avatars.githubusercontent.com/u/46537744?v=4" alt="Avatar de Prof. Michel Pires" style="border-radius:50%; border:4px solid #00599C; box-shadow:0 0 10px #00599C; width:100px;"><br>
+      <strong>Prof. Michel Pires</strong><br>
+      <a href="https://github.com/mpiress">
+        <img src="https://img.shields.io/github/followers/mpiress?label=Seguidores&style=social&logo=github" alt="GitHub - Prof. Michel Pires">
+      </a>
+    </td>
+  </tr>
+</table>
 
-### Arthur Santana de Mesquita
 
-<div> 
-  <a href="https://www.youtube.com/@arthursm" target="_blank"><img src="https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white" target="_blank"></a>
-  <a href="https://instagram.com/arthur.s.mesquita/" target="_blank"><img src="https://img.shields.io/badge/-Instagram-%23E4405F?style=for-the-badge&logo=instagram&logoColor=white" target="_blank"></a>
- 	<a href="https://www.twitch.tv/rutrama" target="_blank"><img src="https://img.shields.io/badge/Twitch-9146FF?style=for-the-badge&logo=twitch&logoColor=white" target="_blank"></a>
-  <a href = "mailto:mesquita@aluno.cefetmg.br"><img src="https://img.shields.io/badge/-Gmail-%23333?style=for-the-badge&logo=gmail&logoColor=white" target="_blank"></a>
-  <a href="https://www.linkedin.com/in/arthur-s-m/" target="_blank"><img src="https://img.shields.io/badge/-LinkedIn-%230077B5?style=for-the-badge&logo=linkedin&logoColor=white" target="_blank"></a>
-</div>
-
-### Arthur de Oliveira Mendonça 
-
-<div> 
-  <a href="https://www.youtube.com/@msjujubr" target="_blank"><img src="https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white" target="_blank"></a>
-  <a href="https://instagram.com/msjujubr" target="_blank"><img src="https://img.shields.io/badge/-Instagram-%23E4405F?style=for-the-badge&logo=instagram&logoColor=white" target="_blank"></a>
- 	<a href="https://www.twitch.tv/msjujubr" target="_blank"><img src="https://img.shields.io/badge/Twitch-9146FF?style=for-the-badge&logo=twitch&logoColor=white" target="_blank"></a>
-  <a href = "mailto:juliamourasouza10@gmail.com"><img src="https://img.shields.io/badge/-Gmail-%23333?style=for-the-badge&logo=gmail&logoColor=white" target="_blank"></a>
-  <a href="https://www.linkedin.com/in/msjujubr/" target="_blank"><img src="https://img.shields.io/badge/-LinkedIn-%230077B5?style=for-the-badge&logo=linkedin&logoColor=white" target="_blank"></a>
-</div>
-
-### João Antônio 
-
-<div> 
-  <a href="https://www.youtube.com/@msjujubr" target="_blank"><img src="https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white" target="_blank"></a>
-  <a href="https://instagram.com/msjujubr" target="_blank"><img src="https://img.shields.io/badge/-Instagram-%23E4405F?style=for-the-badge&logo=instagram&logoColor=white" target="_blank"></a>
- 	<a href="https://www.twitch.tv/msjujubr" target="_blank"><img src="https://img.shields.io/badge/Twitch-9146FF?style=for-the-badge&logo=twitch&logoColor=white" target="_blank"></a>
-  <a href = "mailto:juliamourasouza10@gmail.com"><img src="https://img.shields.io/badge/-Gmail-%23333?style=for-the-badge&logo=gmail&logoColor=white" target="_blank"></a>
-  <a href="https://www.linkedin.com/in/msjujubr/" target="_blank"><img src="https://img.shields.io/badge/-LinkedIn-%230077B5?style=for-the-badge&logo=linkedin&logoColor=white" target="_blank"></a>
-</div>
-
-
-### Júlia de Moura Souza
-
-<div> 
-  <a href="https://www.youtube.com/@msjujubr" target="_blank"><img src="https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white" target="_blank"></a>
-  <a href="https://instagram.com/msjujubr" target="_blank"><img src="https://img.shields.io/badge/-Instagram-%23E4405F?style=for-the-badge&logo=instagram&logoColor=white" target="_blank"></a>
- 	<a href="https://www.twitch.tv/msjujubr" target="_blank"><img src="https://img.shields.io/badge/Twitch-9146FF?style=for-the-badge&logo=twitch&logoColor=white" target="_blank"></a>
-  <a href = "mailto:juliamourasouza10@gmail.com"><img src="https://img.shields.io/badge/-Gmail-%23333?style=for-the-badge&logo=gmail&logoColor=white" target="_blank"></a>
-  <a href="https://www.linkedin.com/in/msjujubr/" target="_blank"><img src="https://img.shields.io/badge/-LinkedIn-%230077B5?style=for-the-badge&logo=linkedin&logoColor=white" target="_blank"></a>
-</div>
-
-# Agradecimentos
+  
+   
