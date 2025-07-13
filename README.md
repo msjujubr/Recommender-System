@@ -131,7 +131,6 @@ Para compilar e executar o projeto, siga os passos:
     -   `make`: Compila o projeto, criando os executáveis necessários.
     -   `make clean`: Remove os arquivos de compilação gerados (objetos e executáveis).
     -   `make run`: Compila o projeto (se necessário) e executa o programa principal.
-    -   `make c`: Uma combinação de `make clean` e `make run`, útil para recompilar e executar o projeto do zero.
 
 O programa gerará o arquivo `input.dat` no diretório `datasets/` após o pré-processamento e o arquivo `output.dat` no diretório `outcome/` com as recomendações geradas.
 
