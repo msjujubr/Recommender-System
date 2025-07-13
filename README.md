@@ -139,7 +139,7 @@ O programa gerará o arquivo `input.dat` no diretório `datasets/` após o pré-
 
 | Máquina | Processador            | Memória RAM | Sistema Operacional |
 |------------------|------------------------|-------------|---------------------|
-| ? | ?    | ?       | ?     |
+| Acer Nitro 5 | Intel Core i5-11400H    | 8 GB       | ?     |
 | Lenovo ideaPad Gaming 3i    | Intel Core i5-11300H      | 8 GB        | Ubuntu 22.04       |
 
 
