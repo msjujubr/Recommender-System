@@ -128,8 +128,9 @@ Para compilar e executar o projeto, siga os passos:
 1.  **Pré-requisitos**: Certifique-se de ter um compilador C++ (como g++) e `make` instalados em seu sistema.
 2.  **Navegar até o diretório do projeto**: Abra um terminal e navegue até o diretório raiz do projeto.
 3.  **Comandos do Makefile**:
-    -   `make`: Compila o projeto, criando os executáveis necessários.
+    
     -   `make clean`: Remove os arquivos de compilação gerados (objetos e executáveis).
+    -   `make`: Compila o projeto, criando os executáveis necessários.
     -   `make run`: Compila o projeto (se necessário) e executa o programa principal.
 
 O programa gerará o arquivo `input.dat` no diretório `datasets/` após o pré-processamento e o arquivo `output.dat` no diretório `outcome/` com as recomendações geradas.
