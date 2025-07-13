@@ -132,6 +132,21 @@ Para compilar e executar o projeto, siga os passos:
     -   `make clean`: Remove os arquivos de compilação gerados (objetos e executáveis).
     -   `make`: Compila o projeto, criando os executáveis necessários.
     -   `make run`: Compila o projeto (se necessário) e executa o programa principal.
+  
+4.**Estrutura de Diretórios**:
+
+```
+/Recommender-System-main/
+│
+├── datasets/
+│ └── ratings.csv <-- COLOQUE O ARQUIVO DO DATASET AQUI
+│
+├── outcome
+│
+├── src
+│
+├── makefile
+```
 
 O programa gerará o arquivo `input.dat` no diretório `datasets/` após o pré-processamento e o arquivo `output.dat` no diretório `outcome/` com as recomendações geradas.
 
