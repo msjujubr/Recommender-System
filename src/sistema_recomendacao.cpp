@@ -1,89 +1,65 @@
 #include "sistema_recomendacao.hpp"
-#include <random>     
-#include <algorithm>  
-#include <limits> 
-#include <iterator>
 
 // função principal
 void sistema_recomendacao() {
-    auto inicio_total = chrono::high_resolution_clock::now();
+    system("mkdir -p outcome");
+    loadInput();
 
-    {
-        auto inicio_processo = chrono::high_resolution_clock::now();
+    // Criar a matriz de usuários
+    pair<matrizUsuarios, pair<vector<int>, std::unordered_map<int, size_t>>> matriz_data = criarMatrizUsuarios("datasets/input.dat");
+    matrizUsuarios userMatrix = matriz_data.first;
+    vector<int> uniqueMovies = matriz_data.second.first;
+    std::unordered_map<int, size_t> filme_id_to_index = matriz_data.second.second;
 
-        cout << "Pre-processamento" << endl;
-        loadInput();
-
-        auto fim_processo = chrono::high_resolution_clock::now();
-        auto duracao = chrono::duration_cast<chrono::milliseconds>(fim_processo - inicio_processo);
-        cout << "Tempo de Pre-processamento: " << duracao.count() << " ms" << endl;
+    // Gerar explore.dat com usuários da userMatrix
+    vector<int> users_in_matrix;
+    for (auto const &[userID, ratings] : userMatrix) {
+        users_in_matrix.push_back(userID);
     }
+    gerarExploreFileFromVector(users_in_matrix, "datasets/explore.dat", config::Quant_Usuarios); // Passa o vetor de usuários existentes
 
-    {
-        auto inicio_processo = chrono::high_resolution_clock::now();
+    // Construir o índice LSH
+    LSHIndex lsh_index = construirIndiceLSH(userMatrix, uniqueMovies, filme_id_to_index);
 
-        cout << "Criando a matriz de usuários..." << endl;
-        string inputFile = "datasets/input.dat";
-        auto resultado_matriz = criarMatrizUsuarios(inputFile);
-        matrizUsuarios userMatrix = resultado_matriz.first;
-        vector<int> uniqueMovies = resultado_matriz.second.first;
-        unordered_map<int, size_t> filme_id_to_index = resultado_matriz.second.second; // Obtenha o mapeamento
-
-        // --- Construção do Índice LSH ---
-        cout << "Construindo o índice LSH..." << endl;
-        LSHIndex lsh_index = construirIndiceLSH(userMatrix, uniqueMovies, filme_id_to_index);
-
-        // --- Geração de Recomendações usando LSH ---
-        cout << "Gerando recomendações com LSH..." << endl;
-        string exploreFile = "datasets/explore.dat";
-        string outputFile = "outcome/output.dat";
-        gerarRecomendacoesLSH(userMatrix, lsh_index, exploreFile, outputFile);
-        auto fim_processo = chrono::high_resolution_clock::now();
-        auto duracao = chrono::duration_cast<chrono::milliseconds>(fim_processo - inicio_processo);
-        cout << "Tempo para gerar recomendações: " << duracao.count() << " ms" << endl;
-
-    }
-
-    auto fim_total = chrono::high_resolution_clock::now();
-    auto duracao_total = chrono::duration_cast<chrono::seconds>(fim_total - inicio_total);
-    cout << "Tempo de execução Final: " << duracao_total.count() << " s" << endl;
+    // Gerar recomendações com LSH
+    gerarRecomendacoesLSH(userMatrix, lsh_index, "datasets/explore.dat", "outcome/output.dat");
 
 }
 
 //Cria a matriz de usuários(linhas são usuários e colunas são os filmes)
-pair<matrizUsuarios, pair<vector<int>, unordered_map<int, size_t>>> criarMatrizUsuarios(string &arquivo) {
+pair<matrizUsuarios, pair<vector<int>, std::unordered_map<int, size_t>>> criarMatrizUsuarios(const string &arquivo) {
     matrizUsuarios matriz;
     vector<int> filmesUnicos;
-    unordered_map<int, size_t> filme_indice;
+    std::unordered_map<int, size_t> filme_indice;
 
     ifstream input(arquivo);
-    string linha;
-    size_t filmeIndexCounter = 0;
+    static thread_local char buf[65536]; // 64KB buffer
+    unsigned long filmeIndexCounter = 0;
 
-    filmesUnicos.reserve(40000); // Prealoca espaço
-
-    while (getline(input, linha)) {
-        const char *str = linha.c_str();
+    while (input.getline(buf, sizeof(buf))) {
+        char *str = buf;
         char *end;
 
-        int usuario = strtol(str, &end, 10); // lê usuário
-        unordered_map<int, float> &avaliacoes = matriz[usuario];
+        int usuario = strtol(str, &end, 10);
+        std::unordered_map<int, float> &avaliacoes = matriz[usuario];
 
         while (*end) {
-            while (*end == ' ') ++end; // ignora espaços
+            while (*end == ' ') ++end;
 
             int filme = strtol(end, &end, 10);
             if (*end != ':') break;
             ++end;
             float nota = strtof(end, &end);
 
-            // Novo filme?
-            if (!filme_indice.count(filme)) {
-                filme_indice[filme] = filmeIndexCounter++;
+            // Optimize movie indexing with std::unordered_map
+            auto existing = filme_indice.find(filme);
+            if (existing == filme_indice.end()) {
+                filme_indice.emplace(filme, filmeIndexCounter);
+                filmeIndexCounter++;
                 filmesUnicos.push_back(filme);
             }
 
-            avaliacoes[filme] = nota;
+            avaliacoes.emplace(filme, nota);
         }
     }
 
@@ -94,37 +70,22 @@ pair<matrizUsuarios, pair<vector<int>, unordered_map<int, size_t>>> criarMatrizU
 
 //normaliza os vetores para posterior uso da similaridade por cosseno
 void normalizarMatriz(matrizUsuarios &matriz) {
-    for (auto &[usuario, avaliacoes] : matriz) {
+    for (auto it = matriz.begin(); it != matriz.end(); ++it) {
+        auto &avaliacoes = it->second;
         // Calcula a norma L2 do vetor de avaliações do usuário
         float soma_quadrados = 0.0f;
-        for (const auto &[filme, nota] : avaliacoes) {
-            soma_quadrados += nota * nota;
+        for (auto rating_it = avaliacoes.begin(); rating_it != avaliacoes.end(); ++rating_it) {
+            soma_quadrados += rating_it->second * rating_it->second;
         }
         float norma = sqrt(soma_quadrados);
 
         // Normaliza cada avaliação dividindo pela norma
         if (norma > 0.0f) {  // Evita divisão por zero
-            for (auto &[filme, nota] : avaliacoes) {
-                nota /= norma;
+            for (auto rating_it = avaliacoes.begin(); rating_it != avaliacoes.end(); ++rating_it) {
+                rating_it->second /= norma;
             }
         }
     }
-}
-
-// Calcula a similaridade por cosseno entre dois usuários
-float similaridade_cosseno(const unordered_map<int, float> &userA, const unordered_map<int, float> &userB) {
-    float soma = 0.0f;
-
-    // Itera sobre os filmes avaliados por userA
-    for (const auto &[filmeID, notaA] : userA) {
-        // Se userB também avaliou o mesmo filme
-        auto itB = userB.find(filmeID);
-        if (itB != userB.end()) {
-            soma += notaA * itB->second;
-        }
-    }
-
-    return soma;  // Como os vetores estão normalizados, o produto escalar já é a similaridade por cosseno
 }
 
 string signatureBandToString(const vector<bool> &band) {
@@ -135,9 +96,8 @@ string signatureBandToString(const vector<bool> &band) {
     return s; // Retorna a string binária que representa a banda da assinatura.
 }
 
-
 // Constrói o índice LSH
-LSHIndex construirIndiceLSH(const matrizUsuarios &userMatrix, const vector<int> &uniqueMovies, const unordered_map<int, size_t> &filme_id_to_index) {
+LSHIndex construirIndiceLSH(const matrizUsuarios &userMatrix, const vector<int> &uniqueMovies, const std::unordered_map<int, size_t> &filme_id_to_index) {
     LSHIndex index;
     index.filme_id_to_index = filme_id_to_index;
     index.unique_movies_ordered = uniqueMovies;
@@ -156,100 +116,113 @@ LSHIndex construirIndiceLSH(const matrizUsuarios &userMatrix, const vector<int> 
     }
 
     // 2. Criar Assinaturas em paralelo
-    mutex signature_mutex;
-    index.user_signatures.reserve(userMatrix.size());
-
-    auto signature_worker = [&](auto start_it, auto end_it) {
-        unordered_map<int, LSHSignature> local_signatures;
-
-        for (auto it = start_it; it != end_it; ++it) {
-            const auto &[userID, ratings] = *it;
-            LSHSignature signature;
-            signature.reserve(config::numHiperplanos);
-
-            for (const auto &hyperplane : index.random_hyperplanes) {
-                float dot = 0.0f;
-                for (const auto &[filmeID, rating] : ratings) {
-                    auto it_index = index.filme_id_to_index.find(filmeID);
-                    if (it_index != index.filme_id_to_index.end()) {
-                        dot += rating * hyperplane[it_index->second];
-                    }
-                }
-                signature.push_back(dot >= 0);
-            }
-
-            local_signatures[userID] = move(signature);
-        }
-
-        lock_guard<mutex> lock(signature_mutex);
-        index.user_signatures.merge(local_signatures);
-    };
-
-    // Dividir usuários entre threads
-    const unsigned num_threads = thread::hardware_concurrency();
+    const unsigned long num_threads = thread::hardware_concurrency();
     vector<thread> threads;
-    auto it = userMatrix.begin();
-    size_t chunk_size = userMatrix.size() / num_threads;
+    vector<unordered_map<int, LSHSignature>> all_local_signatures(num_threads);
 
-    for (unsigned i = 0; i < num_threads; ++i) {
-        auto start_it = it;
-        advance(it, chunk_size);
-        auto end_it = (i == num_threads - 1) ? userMatrix.end() : it;
-        threads.emplace_back(signature_worker, start_it, end_it);
+    // Distribuir usuários entre threads
+    vector<pair<matrizUsuarios::const_iterator, matrizUsuarios::const_iterator>> chunks(num_threads);
+    size_t chunk_size = userMatrix.size() / num_threads;
+    auto it_matrix = userMatrix.begin();
+
+    for (unsigned long i = 0; i < num_threads; ++i) {
+        chunks[i].first = it_matrix;
+        if (i == num_threads - 1) {
+            chunks[i].second = userMatrix.end();
+        } else {
+            for (size_t j = 0; j < chunk_size; ++j) {
+                ++it_matrix;
+            }
+            chunks[i].second = it_matrix;
+        }
+    }
+
+    for (unsigned long i = 0; i < num_threads; ++i) {
+        threads.emplace_back([&, i]() {
+            for (auto it = chunks[i].first; it != chunks[i].second; ++it) {
+                const int userID = it->first;
+                const auto &ratings = it->second;
+                LSHSignature signature;
+                signature.reserve(config::numHiperplanos);
+
+                for (unsigned long h = 0; h < static_cast<unsigned long>(index.random_hyperplanes.size()); ++h) {
+                    const auto &hyperplane = index.random_hyperplanes[h];
+                    float dot = 0.0f;
+                    for (auto rating_it = ratings.begin(); rating_it != ratings.end(); ++rating_it) {
+                        auto it_index = index.filme_id_to_index.find(rating_it->first);
+                        if (it_index != index.filme_id_to_index.end()) {
+                            dot += rating_it->second * hyperplane[it_index->second];
+                        }
+                    }
+                    signature.push_back(dot >= 0);
+                }
+                all_local_signatures[i][userID] = move(signature);
+            }
+        });
     }
 
     for (auto &t : threads) {
         t.join();
+    }
+    threads.clear();
+
+    // Merge all local signatures into the main index.user_signatures
+    for (auto &local_map : all_local_signatures) {
+        for (auto &pair : local_map) {
+            index.user_signatures.insert(pair);
+        }
     }
 
     // 3. Agrupamento em Baldes em paralelo
     index.lsh_buckets.resize(config::numBandas);
-    vector<mutex> bucket_mutexes(config::numBandas);
+    vector<unordered_map<string, vector<int>>> all_local_buckets(num_threads * config::numBandas);
 
-    auto bucket_worker = [&](auto start_it, auto end_it) {
-        vector<unordered_map<string, vector<int>>> local_buckets(config::numBandas);
+    // Distribuir assinaturas entre threads
+    vector<pair<unordered_map<int, LSHSignature>::const_iterator, unordered_map<int, LSHSignature>::const_iterator>> sig_chunks(num_threads);
+    size_t sig_chunk_size = index.user_signatures.size() / num_threads;
+    auto it_sig_start = index.user_signatures.begin();
 
-        for (auto it = start_it; it != end_it; ++it) {
-            const auto &[userID, signature] = *it;
-
-            for (int band = 0; band < config::numBandas; ++band) {
-                int start = band * config::bitsPorBanda;
-                int end = min(start + config::bitsPorBanda, static_cast<int>(signature.size()));
-
-                vector<bool> band_bits(signature.begin() + start, signature.begin() + end);
-                string band_key = signatureBandToString(band_bits);
-
-                local_buckets[band][band_key].push_back(userID);
+    for (unsigned long i = 0; i < num_threads; ++i) {
+        sig_chunks[i].first = it_sig_start;
+        if (i == num_threads - 1) {
+            sig_chunks[i].second = index.user_signatures.end();
+        } else {
+            for (size_t j = 0; j < sig_chunk_size; ++j) {
+                ++it_sig_start;
             }
+            sig_chunks[i].second = it_sig_start;
         }
+    }
 
-        // Merge com os buckets globais
-        for (int band = 0; band < config::numBandas; ++band) {
-            lock_guard<mutex> lock(bucket_mutexes[band]);
-            for (auto &[key, users] : local_buckets[band]) {
-                index.lsh_buckets[band][key].insert(
-                    index.lsh_buckets[band][key].end(),
-                    users.begin(),
-                    users.end()
-                );
+    for (unsigned long i = 0; i < num_threads; ++i) {
+        threads.emplace_back([&, i]() {
+            for (auto it = sig_chunks[i].first; it != sig_chunks[i].second; ++it) {
+                const auto &[userID, signature] = *it;
+
+                for (int band = 0; band < config::numBandas; ++band) {
+                    int start = band * config::bitsPorBanda;
+                    int end = min(start + config::bitsPorBanda, static_cast<int>(signature.size()));
+
+                    vector<bool> band_bits(signature.begin() + start, signature.begin() + end);
+                    string band_key = signatureBandToString(band_bits);
+
+                    all_local_buckets[i * config::numBandas + band][band_key].push_back(userID);
+                }
             }
-        }
-    };
-
-    // Dividir assinaturas entre threads
-    threads.clear();
-    auto it_sig = index.user_signatures.begin();
-    chunk_size = index.user_signatures.size() / num_threads;
-
-    for (unsigned i = 0; i < num_threads; ++i) {
-        auto start_it = it_sig;
-        advance(it_sig, chunk_size);
-        auto end_it = (i == num_threads - 1) ? index.user_signatures.end() : it_sig;
-        threads.emplace_back(bucket_worker, start_it, end_it);
+        });
     }
 
     for (auto &t : threads) {
         t.join();
+    }
+
+    // Merge all local buckets into the main index.lsh_buckets
+    for (int band = 0; band < config::numBandas; ++band) {
+        for (unsigned long i = 0; i < num_threads; ++i) {
+            for (auto &[key, users] : all_local_buckets[i * config::numBandas + band]) {
+                index.lsh_buckets[band][key].insert(index.lsh_buckets[band][key].end(), users.begin(), users.end());
+            }
+        }
     }
 
     return index;
@@ -309,14 +282,16 @@ void gerarRecomendacoesLSH(const matrizUsuarios &userMatrix, const LSHIndex &lsh
     mutex results_mutex;
 
     // Número de threads baseado no hardware
-    const unsigned num_threads = thread::hardware_concurrency();
+    const unsigned long num_threads = thread::hardware_concurrency();
     vector<thread> threads;
 
     // Pré-processamento: mapa de filmes avaliados por usuário
     unordered_map<int, unordered_set<int>> user_rated_movies;
-    for (const auto &[user, ratings] : userMatrix) {
-        for (const auto &[movie, _] : ratings) {
-            user_rated_movies[user].insert(movie);
+    for (auto it = userMatrix.begin(); it != userMatrix.end(); ++it) {
+        const int user = it->first;
+        const auto &ratings = it->second;
+        for (auto rating_it = ratings.begin(); rating_it != ratings.end(); ++rating_it) {
+            user_rated_movies[user].insert(rating_it->first);
         }
     }
 
@@ -335,13 +310,18 @@ void gerarRecomendacoesLSH(const matrizUsuarios &userMatrix, const LSHIndex &lsh
 
             // Verificar se usuário existe na matriz
             auto it_query = userMatrix.find(query_userID);
-            if (it_query == userMatrix.end()) continue;
+            if (it_query == userMatrix.end()) {
+                continue;
+            }
 
             const auto &query_ratings = it_query->second;
             const auto &query_movies = user_rated_movies[query_userID];
 
             // 1. Encontrar candidatos via LSH
             auto candidates = encontrarCandidatosLSH(query_userID, lsh_index);
+            if (candidates.empty()) {
+                continue;
+            }
 
             // 2. Calcular similaridade com heap top-K
             priority_queue<pair<float, int>> topK; // max-heap
@@ -356,23 +336,27 @@ void gerarRecomendacoesLSH(const matrizUsuarios &userMatrix, const LSHIndex &lsh
 
                 // Iterar sobre o vetor menor para melhor performance
                 if (query_ratings.size() < cand_ratings.size()) {
-                    for (const auto &[movie, rating] : query_ratings) {
-                        auto it = cand_ratings.find(movie);
+                    for (auto rating_it = query_ratings.begin(); rating_it != query_ratings.end(); ++rating_it) {
+                        auto it = cand_ratings.find(rating_it->first);
                         if (it != cand_ratings.end()) {
-                            sim += rating * it->second;
+                            sim += rating_it->second * it->second;
                         }
                     }
                 } else {
-                    for (const auto &[movie, rating] : cand_ratings) {
-                        auto it = query_ratings.find(movie);
+                    for (auto rating_it = cand_ratings.begin(); rating_it != cand_ratings.end(); ++rating_it) {
+                        auto it = query_ratings.find(rating_it->first);
                         if (it != query_ratings.end()) {
-                            sim += rating * it->second;
+                            sim += rating_it->second * it->second;
                         }
                     }
                 }
 
                 topK.push({ sim, candidate_id });
-                if (topK.size() > static_cast<size_t>(config::K)) topK.pop();
+                if (topK.size() > static_cast<unsigned long>(config::K)) topK.pop();
+            }
+
+            if (topK.empty()) {
+                continue;
             }
 
             // 3. Recomendar filmes não avaliados pelo usuário
@@ -382,12 +366,21 @@ void gerarRecomendacoesLSH(const matrizUsuarios &userMatrix, const LSHIndex &lsh
                 auto [sim, similar_userID] = topK.top();
                 topK.pop();
 
-                for (const auto &[filmeID, nota] : userMatrix.at(similar_userID)) {
-                    if (query_movies.count(filmeID) == 0) {
-                        movie_scores[filmeID].first += nota;
-                        movie_scores[filmeID].second++;
+                auto similar_user_it = userMatrix.find(similar_userID);
+                if (similar_user_it != userMatrix.end()) {
+                    for (auto movie_it = similar_user_it->second.begin(); movie_it != similar_user_it->second.end(); ++movie_it) {
+                        const int filmeID = movie_it->first;
+                        const float nota = movie_it->second;
+                        if (query_movies.count(filmeID) == 0) {
+                            movie_scores[filmeID].first += nota;
+                            movie_scores[filmeID].second++;
+                        }
                     }
                 }
+            }
+
+            if (movie_scores.empty()) {
+                continue;
             }
 
             // 4. Selecionar top-N filmes
@@ -418,7 +411,7 @@ void gerarRecomendacoesLSH(const matrizUsuarios &userMatrix, const LSHIndex &lsh
     };
 
     // Criar pool de threads
-    for (unsigned i = 0; i < num_threads; ++i) {
+    for (unsigned long i = 0; i < num_threads; ++i) {
         threads.emplace_back(worker);
     }
 
@@ -426,6 +419,7 @@ void gerarRecomendacoesLSH(const matrizUsuarios &userMatrix, const LSHIndex &lsh
     for (auto &t : threads) {
         t.join();
     }
+
 
     // Escrever resultados no arquivo de saída
     ofstream output_stream(output_file);
