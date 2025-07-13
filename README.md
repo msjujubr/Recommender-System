@@ -132,6 +132,31 @@ Para compilar e executar o projeto, siga os passos:
     -   `make clean`: Remove os arquivos de compilação gerados (objetos e executáveis).
     -   `make`: Compila o projeto, criando os executáveis necessários.
     -   `make run`: Compila o projeto (se necessário) e executa o programa principal.
+
+## Onde Baixar o Dataset
+
+ *Use EXATAMENTE este dataset oficial para garantir consistência nos testes:*  
+
+- [![Site Oficial](https://img.shields.io/badge/🌐_Site_Oficial-blue?style=for-the-badge&logo=gatsby)](https://grouplens.org/datasets/movielens/25m/)  
+- [![Download Direto](https://img.shields.io/badge/⬇_Download_Direto-green?style=for-the-badge&logo=go-download)](https://files.grouplens.org/datasets/movielens/ml-25m.zip) (≈250 MB)  
+
+
+### Passos:
+1. *Acesse o link acima*  
+2. *Clique em "ml-25m.zip"* (≈250MB)  
+3. **Extraia o arquivo ratings.csv** para a pasta /datasets do seu projeto
+
+### Verificação:
+bash
+- Confira se o arquivo está correto (primeiras linhas):
+head -n 5 datasets/ratings.csv
+- Saída esperada:
+
+```
+ userId,movieId,rating,timestamp
+ 1,296,5.0,1147880044
+ 1,306,3.5,1147868817
+```
   
 4.**Estrutura de Diretórios**:
 
@@ -214,7 +239,3 @@ As otimizações implementadas, especialmente o uso extensivo de paralelismo com
     </td>
   </tr>
 </table>
-
-
-  
-   
